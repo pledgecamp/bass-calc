@@ -25,7 +25,7 @@ class App(tk.Tk):
 
     def show_main(self, graph):
         main = MainPage(self, graph)
-        main.grid(row=0, column=0, sticky="nsew")
+        main.grid(sticky="nsew")
         main.pack()
         main.tkraise()
         return main
