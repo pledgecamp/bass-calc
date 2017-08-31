@@ -98,12 +98,8 @@ class BassGraph(Figure):
     def __init__(self, w, mag, phase):
         Figure.__init__(self, figsize=(8, 5), dpi=100)
 
-        self.w = w
-        self.mag = mag
-        self.phase = phase
-
         self.plot = self.add_subplot(1, 1, 1)
-        self.plot.plot(w, mag, 'b')
+        self.update(w, mag, phase)
 
     def update(self, w, mag, phase):
         self.w = w
