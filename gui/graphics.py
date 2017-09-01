@@ -47,7 +47,6 @@ class MainPage(tk.Frame):
 
         toolbar = NavigationToolbar2TkAgg(self.graph_canvas, self)
         toolbar.update()
-        #canvas._tkcanvas.grid(row=9,column=0)
 
         button = tk.Button(master=self, text='Quit', command=self.app.exit)
         button.pack(side=tk.BOTTOM)
@@ -70,11 +69,12 @@ class MainPage(tk.Frame):
             i += 1
 
     def setup_param(self, frame, param, row, col):
+        value = param.get_value()
         frame = tk.Frame(frame)
-        frame.grid(row=row, column=col)
+        frame.grid(padx=14, pady=6, row=row, column=col)
         
         label = tk.Label(frame, text=param.get_label())
-        label.grid(row=0, column=0, sticky=tk.E)
+        label.grid(row=0, column=0, sticky=tk.W)
         def validate_cmd(action, text):
             if action == 'key' and (len(text) > 6):
                 return False
@@ -88,12 +88,16 @@ class MainPage(tk.Frame):
             return True
         vcmd = (frame.register(validate_cmd), '%V', '%P')
         entry = tk.Entry(frame, width=6, validate='all', vcmd=vcmd)
+        entry.insert(0, str(value)[:6])
         entry.grid(row=0, column=1)
+
+        units = tk.Label(frame, text=param.get_units())
+        units.grid(row=0, column=2, sticky=tk.W)
 
         scale = tk.Scale(frame, from_=param.get_min(), to=param.get_max(), showvalue=0,
                         orient=tk.HORIZONTAL, resolution=param.get_resolution())
-        scale.set(param.get_value())
-        scale.grid(row=1, columnspan=2)
+        scale.set(value)
+        scale.grid(row=1, columnspan=3)
         return frame
 
     def set_fs_callback(self, callback):

@@ -21,7 +21,7 @@ class ParamController:
         return self.param.m.real
     
     def get_units(self):
-        return None
+        return "{:~P}".format(self.param.to_root_units().u)
 
     # TODO -- convert to current units (for get_max as well)
     def get_min(self):
