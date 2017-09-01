@@ -6,8 +6,8 @@ import numpy as np
 from numpy import sqrt, power
 from scipy import signal
 from scipy.integrate import odeint
-from graphics import init_app, show_main, start_app
-from parameters import Cab, Qs, Qmp, Vb, Tp, Ts, α, δ, y, Fp, Fs
+from gui.controller import init_app, show_main, start_app
+from calc.parameters import Cab, Qs, Qmp, Vb, Tp, Ts, α, δ, y, Fp, Fs
 
 # Equation from "Complete Response Function and System Parameters for a Loudspeaker with Passive Radiator"
 # by Douglas H. Hurlburt
@@ -53,17 +53,14 @@ main_equation = Equation()
 
 def vb_changed(main, value):
     print("Vb updated: {}".format(value))
-    global Vb
     Vb.set_value(0.5 + float(value), 'cm**3')
     update(main)
 
 def fs_changed(main, value):
-    global fs
     Fs.set_value(int(value), 'Hz')
     update(main)
 
 def fp_changed(main, value):
-    global fp
     Fp.set_value(int(value), 'Hz')
     update(main)
 
@@ -76,8 +73,8 @@ def run():
     init_app()
     w, mag, phase = main_equation.calculate()
     main = show_main(w, mag, phase)
-    main.set_fs_callback(fs_changed)
-    main.set_fp_callback(fp_changed)
+    #main.set_fs_callback(fs_changed)
+    #main.set_fp_callback(fp_changed)
     start_app()
 
 if __name__ == '__main__':

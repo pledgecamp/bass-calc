@@ -7,9 +7,6 @@ from pint import UnitRegistry
 ureg = UnitRegistry()
 Q_ = ureg.Quantity
 
-# Note: may be a hacky way to sanity check update_fn variable usage using fn.__code__.co_names
-# If it works well it can be used to avoid add_children (infer from update_fn)
-
 parameters = {}
 
 pi2 = pi ** 2
@@ -24,6 +21,12 @@ class PState(Enum):
 
     def __repr__(self):
         return self.name
+
+class PGroup(Enum):
+    CONSTANT = 0
+    SPEAKER = 1
+    PASSIVE = 2
+    ENCLOSURE = 3
 
 def Parameter(name, initial=0, min_value=None, max_value=None):
     if parameters.get(name):
@@ -200,11 +203,8 @@ Ts.set_update_fn(lambda: (1 / ωs))
 Fs.set_update_fn(lambda: (1 / ( 2 * pi * sqrt(Mas * Cas))))
 
 Qes.set_update_fn(lambda: ((ωs * Re * Mas * (Sd ** 2)) / (Bl ** 2)))
-
 Qms.set_update_fn(lambda: (1 / (ωs * Cas * Ras)))
-
 Qts.set_update_fn(lambda: ((Qes * Qms) / (Qes + Qms)))
-
 Qs.set_update_fn(lambda: Qts)
 
 Vb.set_update_fn(lambda: (ρ0 * (c**2) * Cab))
@@ -231,9 +231,22 @@ h.set_update_fn(lambda: Fb / Fp)
 for param in parameters.values():
     param.update()
 
-for param in parameters.values():
-    #print(param)
-    pass
+driver_parameters = [
+    Xmax, Vd, Sd, Bl, Re, Mmd, Mms, Mas, Rms, Ras, Cms, Cas, Vas, Rg,
+    Ts, ωs, Fs, Qes, Qms, Qts, Qs, Cab, Vb
+]
+passive_parameters = [
+    Vap, Cmp, Cap, Rmp, Rap, Mmp, Map, Sp,
+    Qmp, ωp, Fp, Tp
+]
+enclosure_parameters = [
+    ωb, Fb, Tb, α, δ, y, h, η0
+]
+constant_parameters = [
+    ρ0, c
+]
 
-print(Qts.to_base_units())
-print(η0.to_base_units())
+if __name__ == '__main__':
+    print(len(parameters.values()))
+    print(len(driver_parameters)+len(passive_parameters)+len(enclosure_parameters)+len(constant_parameters))
+    print(Xmax.m.real)

@@ -1,11 +1,6 @@
+from util import float_or_none
 
 SAVE_FILE = "save_files/{}"
-
-def float_or_none(x):
-    try:
-        return float(x)
-    except ValueError:
-        return None
 
 def load_file(name, parameters):
     with open(SAVE_FILE.format(name), 'r') as f:

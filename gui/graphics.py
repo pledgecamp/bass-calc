@@ -6,26 +6,19 @@ from matplotlib.figure import Figure
 from matplotlib.backend_bases import key_press_handler
 import tkinter as tk
 from tkinter import ttk
+from util import float_or_none, pairs
 
 LARGE_FONT= ("Verdana", 12)
-
-app = None
 
 class App(tk.Tk):
 
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
-
         tk.Tk.wm_title(self, "Bass Visulization")
 
-        container = tk.Frame(self)
-        container.pack(side="top", fill="both", expand = True)
-        container.grid_rowconfigure(0, weight=1)
-        container.grid_columnconfigure(0, weight=1)
-
-    def show_main(self, graph):
-        main = MainPage(self, graph)
-        main.pack()
+    def show_main(self, graph, param_groups):
+        main = MainPage(self, graph, param_groups)
+        main.pack(fill=tk.BOTH, expand=1)
         main.tkraise()
         return main
 
@@ -36,19 +29,21 @@ class App(tk.Tk):
 
 class MainPage(tk.Frame):
 
-    def __init__(self, parent, graph):
+    def __init__(self, parent, graph, param_groups):
         tk.Frame.__init__(self, parent)
         self.app = parent
         self.graph = graph
-        label = tk.Label(self, text="Bass Calculator!", font=LARGE_FONT)
-        label.pack(padx=10, pady=10)
         
-        self.fs_scale = self.setup_scale("Fs ", 30, 100, 55)
-        self.fp_scale = self.setup_scale("Fp ", 10, 80, 35)
+        self.param_tabs = ttk.Notebook(self)
+        self.param_tabs.pack(side=tk.LEFT, fill=tk.BOTH, expand=0)
+
+        for group in param_groups:
+            self.setup_param_group(group)
 
         self.graph_canvas = FigureCanvasTkAgg(graph, self)
         self.graph_canvas.show()
-        self.graph_canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        self.graph_canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+        self.graph_canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
         toolbar = NavigationToolbar2TkAgg(self.graph_canvas, self)
         toolbar.update()
@@ -56,24 +51,50 @@ class MainPage(tk.Frame):
 
         button = tk.Button(master=self, text='Quit', command=self.app.exit)
         button.pack(side=tk.BOTTOM)
-        self.graph_canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
         def on_key_event(event):
             print('you pressed %s' % event.key)
             key_press_handler(event, self.graph_canvas, toolbar)
 
         self.graph_canvas.mpl_connect('key_press_event', on_key_event)
+    
+    def setup_param_group(self, group):
+        frame = tk.Frame(self.param_tabs)
+        frame.pack(fill=tk.BOTH, expand=1)
+        self.param_tabs.add(frame, text=group.title)
+        i = 0
+        for p1, p2 in pairs(group.params):
+            self.setup_param(frame, p1, i, 0)
+            if p2:
+                self.setup_param(frame, p2, i, 1)
+            i += 1
 
-    def setup_scale(self, label, from_, to, default, resolution=1):
-        scaleFrame = tk.Frame(self)
-        scaleFrame.pack(side=tk.TOP)
-        scaleLabel = tk.Label(scaleFrame, text=label)
-        scaleLabel.pack(side=tk.LEFT, anchor=tk.S)
+    def setup_param(self, frame, param, row, col):
+        frame = tk.Frame(frame)
+        frame.grid(row=row, column=col)
+        
+        label = tk.Label(frame, text=param.get_label())
+        label.grid(row=0, column=0, sticky=tk.E)
+        def validate_cmd(action, text):
+            if action == 'key' and (len(text) > 6):
+                return False
+            elif action == 'focusout':
+                val = float_or_none(text)
+                if (not val) or (val > param.get_max()) or (val < param.get_min()):
+                    print("Focusout invalid")
+                    label.configure(fg='red')
+                    return False
+            label.configure(fg='black')
+            return True
+        vcmd = (frame.register(validate_cmd), '%V', '%P')
+        entry = tk.Entry(frame, width=6, validate='all', vcmd=vcmd)
+        entry.grid(row=0, column=1)
 
-        scale = tk.Scale(scaleFrame, from_=from_, to=to, orient=tk.HORIZONTAL, resolution=resolution)
-        scale.set(default)
-        scale.pack(side=tk.LEFT)
-        return scale
+        scale = tk.Scale(frame, from_=param.get_min(), to=param.get_max(), showvalue=0,
+                        orient=tk.HORIZONTAL, resolution=param.get_resolution())
+        scale.set(param.get_value())
+        scale.grid(row=1, columnspan=2)
+        return frame
 
     def set_fs_callback(self, callback):
         def changed(value):
@@ -108,13 +129,3 @@ class BassGraph(Figure):
         self.plot.cla()
         self.plot.plot(w, mag, 'b')
 
-def init_app():
-    global app
-    app = App()
-
-def show_main(w, mag, phase):
-    main = app.show_main(BassGraph(w, mag, phase))
-    return main
-
-def start_app():
-    app.mainloop()
