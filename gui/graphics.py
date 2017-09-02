@@ -14,7 +14,7 @@ class App(tk.Tk):
 
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
-        tk.Tk.wm_title(self, "Bass Visulization")
+        tk.Tk.wm_title(self, "Bass Visualization")
 
     def show_main(self, graph, param_groups):
         main = MainPage(self, graph, param_groups)
@@ -26,6 +26,69 @@ class App(tk.Tk):
         self.quit()     # stops mainloop
         self.destroy()  # this is necessary on Windows to prevent
                         # Fatal Python Error: PyEval_RestoreThread: NULL tstate
+
+class ParamWidget(tk.Frame):
+
+    def __init__(self, parent, param):
+        tk.Frame.__init__(self, parent)
+        self.param = param
+        value = param.get_value()
+        
+        self.label = tk.Label(self, text=param.get_label())
+
+        scale_cmd = self.make_scale_cmd()
+        self.slider = tk.Scale(self, from_=param.get_min(), to=param.get_max(), showvalue=0,
+                        command=scale_cmd, orient=tk.HORIZONTAL, resolution=param.get_resolution())
+        self.ignore_slider = True
+
+        validate_cmd = self.make_param_validator(param)
+        vcmd = (self.register(validate_cmd), '%V', '%P')
+        self.entry = tk.Entry(self, width=6, validate='key', vcmd=vcmd)
+        self.slider.set(value)
+        self.entry.insert(0, str(value)[:6])
+
+        self.label.grid(row=0, column=0, sticky=tk.W)
+        self.entry.grid(row=0, column=1)
+        self.units = tk.Label(self, text=param.get_units())
+        self.units.grid(row=0, column=2, sticky=tk.W)
+        self.slider.grid(row=1, columnspan=3)
+    
+    def set_entry(self, value, set_slider=False):
+        if (value > self.param.get_max()) or (value < self.param.get_min()):
+            self.label.configure(fg='red')
+            return
+        if set_slider:
+            print("Set slider {}".format(value))
+            self.ignore_slider = True
+            self.slider.set(value)
+        else:
+            self.entry.delete(0, tk.END)
+            self.entry.insert(0, str(value)[:6])
+
+    def make_param_validator(self, param):
+        def validate_cmd(action, text):
+
+            self.label.configure(fg='black')
+            val = float_or_none(text)
+            if len(text) > 6:
+                return False
+            elif val is None:
+                self.label.configure(fg='red')
+                return True
+            else:
+                self.set_entry(val, set_slider=True)
+            return True
+        return validate_cmd
+
+    def make_scale_cmd(self):
+        def changed(value):
+            if self.ignore_slider:
+                self.ignore_slider = False
+                return
+            fval = float_or_none(value)
+            if not (fval is None):
+                self.set_entry(fval)
+        return changed
 
 class MainPage(tk.Frame):
 
@@ -69,50 +132,9 @@ class MainPage(tk.Frame):
             i += 1
 
     def setup_param(self, frame, param, row, col):
-        value = param.get_value()
-        frame = tk.Frame(frame)
-        frame.grid(padx=14, pady=6, row=row, column=col)
-        
-        label = tk.Label(frame, text=param.get_label())
-        label.grid(row=0, column=0, sticky=tk.W)
-        def validate_cmd(action, text):
-            if action == 'key' and (len(text) > 6):
-                return False
-            elif action == 'focusout':
-                val = float_or_none(text)
-                if (not val) or (val > param.get_max()) or (val < param.get_min()):
-                    print("Focusout invalid")
-                    label.configure(fg='red')
-                    return False
-            label.configure(fg='black')
-            return True
-        vcmd = (frame.register(validate_cmd), '%V', '%P')
-        entry = tk.Entry(frame, width=6, validate='all', vcmd=vcmd)
-        entry.insert(0, str(value)[:6])
-        entry.grid(row=0, column=1)
-
-        units = tk.Label(frame, text=param.get_units())
-        units.grid(row=0, column=2, sticky=tk.W)
-
-        scale = tk.Scale(frame, from_=param.get_min(), to=param.get_max(), showvalue=0,
-                        orient=tk.HORIZONTAL, resolution=param.get_resolution())
-        scale.set(value)
-        scale.grid(row=1, columnspan=3)
-        return frame
-
-    def set_fs_callback(self, callback):
-        def changed(value):
-            self.fs_scale_callback(self, value)
-        
-        self.fs_scale_callback = callback
-        self.fs_scale.configure(command=changed)
-
-    def set_fp_callback(self, callback):
-        def changed(value):
-            self.fp_scale_callback(self, value)
-        
-        self.fp_scale_callback = callback
-        self.fp_scale.configure(command=changed)
+        widget = ParamWidget(frame, param)
+        widget.grid(padx=14, pady=6, row=row, column=col)
+        return widget
 
     def update_graph(self, w, mag, phase):
         self.graph.update(w, mag, phase)
