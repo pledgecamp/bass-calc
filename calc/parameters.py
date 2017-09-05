@@ -231,16 +231,18 @@ h.set_update_fn(lambda: Fb / Fp)
 for param in parameters.values():
     param.update()
 
-driver_parameters = [
-    Xmax, Vd, Sd, Bl, Re, Mmd, Mms, Mas, Rms, Ras, Cms, Cas, Vas, Rg,
-    Ts, ωs, Fs, Qes, Qms, Qts, Qs, Cab, Vb
+driver1_parameters = [
+    Xmax, Vd, Sd, Bl, Re, Mmd, Mms, Mas, Rms, Ras, Cms, Cas, Vas, Rg
+]
+driver2_parameters = [
+    Ts, ωs, Fs, Qes, Qms, Qts, Qs
 ]
 passive_parameters = [
     Vap, Cmp, Cap, Rmp, Rap, Mmp, Map, Sp,
     Qmp, ωp, Fp, Tp
 ]
 enclosure_parameters = [
-    ωb, Fb, Tb, α, δ, y, h, η0
+    Vb, Cab, ωb, Fb, Tb, α, δ, y, h, η0
 ]
 constant_parameters = [
     ρ0, c

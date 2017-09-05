@@ -1,5 +1,5 @@
 from .graphics import App, BassGraph
-from calc.parameters import driver_parameters, passive_parameters, enclosure_parameters, constant_parameters
+from calc.parameters import driver1_parameters, driver2_parameters, passive_parameters, enclosure_parameters, constant_parameters
 
 app = None
 
@@ -42,11 +42,12 @@ class ParamGroup:
         self.title = title
         self.params = [ParamController(p) for p in params]
 
-driver_group = ParamGroup("Driver", driver_parameters)
+driver1_group = ParamGroup("Driver1", driver1_parameters)
+driver2_group = ParamGroup("Driver2", driver2_parameters)
 passive_group = ParamGroup("Passive", passive_parameters)
 enclosure_group = ParamGroup("Enclosure", enclosure_parameters)
 constant_group = ParamGroup("Constant", constant_parameters)
-groups = [driver_group, passive_group, enclosure_group, constant_group]
+groups = [driver1_group, driver2_group, passive_group, enclosure_group, constant_group]
 
 def init_app():
     global app

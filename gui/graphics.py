@@ -122,7 +122,6 @@ class MainPage(tk.Frame):
     
     def setup_param_group(self, group):
         frame = tk.Frame(self.param_tabs)
-        frame.pack(fill=tk.BOTH, expand=1)
         self.param_tabs.add(frame, text=group.title)
         i = 0
         for p1, p2 in pairs(group.params):
