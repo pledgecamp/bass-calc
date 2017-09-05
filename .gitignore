@@ -1,2 +1,8 @@
 *.pyc
 save_files/test2.bass
+
+build/
+dist/
+setup.py
+
+.DS_Store
