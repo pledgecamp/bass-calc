@@ -20,6 +20,18 @@ class App(tk.Tk):
         main = MainPage(self, graph, param_groups)
         main.pack(fill=tk.BOTH, expand=1)
         main.tkraise()
+
+        def hello():
+            print("Hello")
+
+        menubar = tk.Menu(self)
+        filemenu = tk.Menu(menubar, tearoff=0)
+        filemenu.add_command(label="Open", command=hello)
+        filemenu.add_command(label="Save", command=hello)
+        filemenu.add_separator()
+        filemenu.add_command(label="Exit", command=self.exit)
+        menubar.add_cascade(label="File", menu=filemenu)
+        self.config(menu=menubar)
         return main
 
     def exit(self):
