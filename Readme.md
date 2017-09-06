@@ -8,6 +8,8 @@ Requires python3 (3.6 or later recommended)
 ```
 mkvirtualenv --python=$(which python3) bass-calc
 ```
+- Double check python3.6 is active (use `python --version`)
+    - If not, try replacing `$(which python3)` in the mkvirtualenv command with the correct python3.6 location
 - Install dependencies:
 ```
 pip install -r requirements.txt
@@ -18,10 +20,10 @@ python bass_calc.py
 ```
 
 ## Mac OSX
-On OSX the backend for matplotlib must be specified.
-To do this, create a file in the ~/.matplotlib directory called "matplotlibrc"
-and add the following line
+## Ubuntu/Debian
+You may need to install the python3-tk package:
 ```
-backend: TkAgg
+sudo apt-get install python3-tk
 ```
-Note that this will change the matplotlib backed for all scripts.
+
+# Usage
