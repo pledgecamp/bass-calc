@@ -7,6 +7,9 @@ class ParamController:
 
     def __init__(self, param):
         self.param = param
+
+    def on_change(self, value):
+        print("{} change to {}".format(self.get_name(), value))
     
     def set_widget(self, widget):
         self.widget = widget

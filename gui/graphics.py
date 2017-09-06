@@ -50,14 +50,18 @@ class ParamWidget(tk.Frame):
 
         scale_cmd = self.make_scale_cmd()
         self.slider = tk.Scale(self, from_=param.get_min(), to=param.get_max(), showvalue=0,
-                        command=scale_cmd, orient=tk.HORIZONTAL, resolution=param.get_resolution())
+                        orient=tk.HORIZONTAL, resolution=param.get_resolution())
+        # Set value before command to avoid reporting the initial value as a change
+        self.slider.set(value)
+        self.slider.config(command=scale_cmd)
+
         self.ignore_slider = True
 
         validate_cmd = self.make_param_validator(param)
         vcmd = (self.register(validate_cmd), '%V', '%P')
-        self.entry = tk.Entry(self, width=6, validate='key', vcmd=vcmd)
-        self.slider.set(value)
+        self.entry = tk.Entry(self, width=6, validate='key')
         self.entry.insert(0, str(value)[:6])
+        self.entry.config(vcmd=vcmd)
 
         self.label.grid(row=0, column=0, sticky=tk.W)
         self.entry.grid(row=0, column=1)
@@ -69,8 +73,9 @@ class ParamWidget(tk.Frame):
         if (value > self.param.get_max()) or (value < self.param.get_min()):
             self.label.configure(fg='red')
             return
-        if set_slider:
+        elif set_slider:
             print("Set slider {}".format(value))
+            self.param.on_change(value)
             self.ignore_slider = True
             self.slider.set(value)
         else:
