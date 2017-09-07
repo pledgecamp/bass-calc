@@ -4,12 +4,16 @@ from calc.parameters import driver1_parameters, driver2_parameters, passive_para
 app = None
 
 class ParamController:
+    param_changed_callback = None
 
     def __init__(self, param):
         self.param = param
 
     def on_change(self, value):
         print("{} change to {}".format(self.get_name(), value))
+        self.param.set_value(value, self.get_units())
+        if not (ParamController.param_changed_callback is None):
+            ParamController.param_changed_callback(self.param, value)
     
     def set_widget(self, widget):
         self.widget = widget
@@ -55,6 +59,9 @@ groups = [driver1_group, driver2_group, passive_group, enclosure_group, constant
 def init_app():
     global app
     app = App()
+
+def register_param_changed_callback(callback):
+    ParamController.param_changed_callback = callback
 
 def show_main(w, mag, phase):
     main = app.show_main(BassGraph(w, mag, phase), groups)

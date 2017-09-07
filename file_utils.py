@@ -2,26 +2,87 @@ from util import float_or_none
 
 SAVE_FILE = "save_files/{}"
 
-def load_file(name, parameters):
+def peek_line(f, consume_fn=None):
+    pos = f.tell()
+    line = f.readline()
+    if (line is None) or (consume_fn and consume_fn(line)):
+        return (line, True)
+    f.seek(pos)
+    return (line, False)
+
+def check_header(line):
+    header = [x.strip() for x in line.split(',')]
+    if len(header) < 4 or header[1].lower() == 'name':
+        return True
+    return False
+
+def check_non_data(line):
+    line = line.strip()
+    if (len(line) == 0) or line[0] == '#':
+        return None
+    return line
+
+def consume_non_data(f):
+    while True:
+        (line, consumed) = peek_line(f, consume_fn=check_non_data)
+        if (line is None) or not consumed:
+            break
+
+def check_value(value_str, type_, line):
+    value = float_or_none(value_str)
+    if not (value is None):
+        return value
+    print("Error line {} ({} must be int or float): {}".format(line, type_, value))
+    return None
+
+def load_file(name):
+    data = []
     with open(SAVE_FILE.format(name), 'r') as f:
         i = 0
+
+        consume_non_data(f)
+        peek_line(f, consume_fn=check_header)
+
         for line in f.readlines():
             i += 1
-            param = [x.strip() for x in line.split("=")]
-            if len(param) == 2:
-                value = float_or_none(param[1])
-                # Overwrite the input value
-                # If the parameter read from the file is formatted incorrectly add None
-                #   as the value, unless the parameter already exists (don't overwrite)
-                if value:
-                    parameters[param[0]] = value
-                elif not parameters.has_key(param[0]):
-                    parameters[param[0]] = value
-                    print("Skipped line {} (VALUE must be int or float): {}".format(i, param[1]))
-                else:
-                    print("Warning line {} (VALUE must be int or float): {}".format(i, param[1]))
+            line = check_non_data(line)
+            if line is None:
+                continue
+
+            param = [x.strip() for x in line.split(',')]
+            if len(param) < 4:
+                print("Error line {} (missing info): {}".format(i, param[0]))
+                continue
+
+            default = check_value(param[1], 'default', i)
+            if default is None:
+                continue
+
+            min_ = check_value(param[2], 'min', i)
+            if min_ is None:
+                continue
+
+            max_ = check_value(param[3], 'max', i)
+            if max_ is None:
+                continue
+
+            if len(param) == 4:
+                units = 'dimensionless'
             else:
-                print("Skipped line {} (format should be PARAM=VALUE): {}".format(i, line))
+                units = param[4]
+
+            data.append((param[0], default, min_, max_, units))
+    return data
+
+def load_defaults(parameters):
+    data = load_file('defaults.bass')
+    for (name, default, min_, max_, units) in data:
+        if name in parameters:
+            param = parameters[name]
+            param.set(default, min_, max_, units)
+        else:
+            print("Error - unknown parameter {}".format(name))
+
 
 def save_file(name, parameters):
     with open(SAVE_FILE.format(name), 'w') as f:

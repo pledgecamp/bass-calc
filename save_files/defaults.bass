@@ -1,0 +1,62 @@
+Name, Default, Min, Max, Units
+
+# Environmental parameters
+
+# density of air at 1atm and 25C
+ρ0,   1.1839, 1,   1.4,   kg / m**3
+
+# Speed of sound
+c,    345,   340,  350,   m/s
+
+Xmax, 4,     0,    100,   mm
+Vd,   0.1,   0,    100,   liter
+Sd,   10,    0,    1000,  cm**2
+Bl,   1,     0,    100,   tesla meter
+Re,   4,     0,    1000,  ohm
+Mmd,  10,    1,    10000, g
+Mms,  10,    1,    10000, g
+Mas,  1,     0,    1000,  kg * cm**2
+Rms,  4,     0,    1000,  N * s / m
+Ras,  1,     0,    1000,  ohm
+Cms,  1,     0,    1000,  meter / N
+Cas,  1,     0,    100,   meter**5 / N
+Vas,  1,     0,    100,   liter
+Rg,   0,     0,    10000
+
+# Driver low level parameters
+Ts,   0.02,  0.2,  100,   s
+ωs,   50,    5,    5000,  Hz
+Fs,   314,   31.4, 31415, Hz
+Qes,  0.5,   0,    30
+Qms,  0.5,   0,    30
+Qts,  0.5,   0,    30
+Qs,   0.5,   0,    30
+Cab,  1,     0,    100,   meter**5 / N
+Vb,   0.1,   0,    100,   liter
+
+# Passive radiator low level parameters
+Vap,  1,     0,    100,   liter
+Cmp,  1,     0,    1000,  meter / N
+Cap,  1,     0,    100,   meter**5 / N
+Rmp,  4,     0,    1000,  N * s / m
+Rap,  1,     0,    1000,  ohm
+Mmp,  1,     1,    10000, g
+Map,  1,     0,    1000,  kg / cm**2
+Sp,   10,    0,    1000,  cm**2
+
+# Passive radiator mid level parameters
+Qmp,  0.5,   0,    30
+ωp,   20,    0,    1000, Hz
+Fp,   120,   0,    6282, Hz
+Tp,   0.05,  0,    0.001, s
+
+# Enclosure parameters
+ωb,   20,    0,    1000, Hz
+Fb,   120,   0,    6282, Hz
+Tb,   0.05,  0,    0.001, s
+
+α,    3.0,   0,    100
+δ,    7.0,   0,    100
+y,    0.5,   0,    100
+h,    0.5,   0,    100
+η0,   0.4,   0,    100

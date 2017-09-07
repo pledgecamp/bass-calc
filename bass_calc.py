@@ -6,8 +6,9 @@ import numpy as np
 from numpy import sqrt, power
 from scipy import signal
 from scipy.integrate import odeint
-from gui.controller import init_app, show_main, start_app
-from calc.parameters import Cab, Qs, Qmp, Vb, Tp, Ts, α, δ, y, Fp, Fs
+from gui.controller import init_app, show_main, start_app, register_param_changed_callback
+from calc.parameters import parameters, Cab, Qs, Qmp, Vb, Tp, Ts, α, δ, y, Fp, Fs
+from file_utils import load_defaults
 
 # Equation from "Complete Response Function and System Parameters for a Loudspeaker with Passive Radiator"
 # by Douglas H. Hurlburt
@@ -26,6 +27,7 @@ class Equation:
 
     @staticmethod
     def calculate_static(Γ, ψ):
+
         T0 = Ts / (sqrt(y) * power(ψ, 0.25)) #8a
         a1 = ((sqrt(y) / power(ψ,0.25)) * 
             ((1 / Qmp) + (1 / (y * Qs)) + (Γ * ((α / y) + (y * δ)))))
@@ -38,7 +40,6 @@ class Equation:
 
         a3 = ((sqrt(y) / power(ψ, 0.75)) *
             (((δ + 1) / Qs) + ((α + 1) / (y * Qmp)) + (Γ * (α + δ))))
-
         b1 = sqrt(y) / (Qmp * power(ψ, 0.25))
         b2 = y / sqrt(ψ)
 
@@ -50,18 +51,9 @@ class Equation:
         return signal.bode(sys)
 
 main_equation = Equation()
+main = None
 
-def vb_changed(main, value):
-    print("Vb updated: {}".format(value))
-    Vb.set_value(0.5 + float(value), 'cm**3')
-    update(main)
-
-def fs_changed(main, value):
-    Fs.set_value(int(value), 'Hz')
-    update(main)
-
-def fp_changed(main, value):
-    Fp.set_value(int(value), 'Hz')
+def param_changed(param, value):
     update(main)
 
 def update(main):
@@ -70,11 +62,12 @@ def update(main):
     main.update_graph(w, mag, phase)
 
 def run():
+    global main
+    load_defaults(parameters)
     init_app()
     w, mag, phase = main_equation.calculate()
     main = show_main(w, mag, phase)
-    #main.set_fs_callback(fs_changed)
-    #main.set_fp_callback(fp_changed)
+    register_param_changed_callback(param_changed)
     start_app()
 
 if __name__ == '__main__':

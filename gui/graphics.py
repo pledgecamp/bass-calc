@@ -74,7 +74,6 @@ class ParamWidget(tk.Frame):
             self.label.configure(fg='red')
             return
         elif set_slider:
-            print("Set slider {}".format(value))
             self.param.on_change(value)
             self.ignore_slider = True
             self.slider.set(value)

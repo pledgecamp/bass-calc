@@ -41,6 +41,7 @@ def Parameter(name, initial=0, min_value=None, max_value=None):
     inst.min_value = Q_(min_value)
     inst.max_value = Q_(max_value)
 
+    inst.set = types.MethodType(q_set, inst)
     inst.set_to = types.MethodType(q_set_to, inst)
     inst.set_quantity_str = types.MethodType(q_set_quantity_str, inst)
     inst.add_children = types.MethodType(q_add_children, inst)
@@ -54,6 +55,11 @@ def Parameter(name, initial=0, min_value=None, max_value=None):
     inst.__str__ = types.MethodType(q__str__, inst)
     inst.__repr__ = types.MethodType(q__repr__, inst)
     return inst
+
+def q_set(self, value, min_, max_, units):
+    self.set_to(Q_(value, units))
+    self.min_value = Q_(min_, units)
+    self.max_value = Q_(max_, units)
 
 def q_set_to(self, other_quantity):
     self._magnitude = other_quantity.magnitude
@@ -151,7 +157,7 @@ Rg = Leaf('Rg', '0', '0', '10000')
 # Driver mid level parameters
 Ts = Parameter('Ts', '0.02s', '0.2s', '(1/5000)s')
 ωs = Parameter('ωs', '50Hz', '5Hz', '5kHz')
-Fs = Parameter('Fs', '314.159Hz', '31.4159s', '31415.93Hz')
+Fs = Parameter('Fs', '314.159Hz', '31.4159Hz', '31415.93Hz')
 Qes = Parameter('Qes', '0.5', '0', '30')
 Qms = Parameter('Qms', '0.5', '0', '30')
 Qts = Parameter('Qts', '0.5', '0', '30')
