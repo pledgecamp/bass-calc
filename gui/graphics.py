@@ -149,6 +149,7 @@ class MainPage(tk.Frame):
     def setup_param(self, frame, param, row, col):
         widget = ParamWidget(frame, param)
         widget.grid(padx=14, pady=6, row=row, column=col)
+        param.set_widget(widget)
         return widget
 
     def update_graph(self, w, mag, phase):

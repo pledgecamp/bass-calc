@@ -12,6 +12,8 @@ class ParamController:
     def on_change(self, value):
         print("{} change to {}".format(self.get_name(), value))
         self.param.set_value(value, self.get_units())
+        for c in self.param.children:
+            c.invalidate(self.param)
         if not (ParamController.param_changed_callback is None):
             ParamController.param_changed_callback(self.param, value)
     
@@ -29,6 +31,12 @@ class ParamController:
     
     def get_units(self):
         return "{:~P}".format(self.param.to_root_units().u)
+    
+    def is_valid(self):
+        return self.param.is_valid()
+
+    def show_invalid(self):
+        self.widget.entry.config(bg='red')
 
     # TODO -- convert to current units (for get_max as well)
     def get_min(self):
@@ -56,6 +64,14 @@ enclosure_group = ParamGroup("Enclosure", enclosure_parameters)
 constant_group = ParamGroup("Constant", constant_parameters)
 groups = [driver1_group, driver2_group, passive_group, enclosure_group, constant_group]
 
+def check_valid():
+    for group in groups:
+        for param_ctrl in group.params:
+            if not param_ctrl.param.is_valid():
+                #print("{} invalid".format(param_ctrl.param.name))
+                param_ctrl.show_invalid()
+
+
 def init_app():
     global app
     app = App()
@@ -65,6 +81,7 @@ def register_param_changed_callback(callback):
 
 def show_main(w, mag, phase):
     main = app.show_main(BassGraph(w, mag, phase), groups)
+    check_valid()
     return main
 
 def start_app():

@@ -52,6 +52,7 @@ def Parameter(name, initial=0, min_value=None, max_value=None):
     inst.debug_units = types.MethodType(q_debug_units, inst)
     inst.set_update_fn = types.MethodType(q_set_update_fn, inst)
     inst.set_value = types.MethodType(q_set_value, inst)
+    inst.is_valid = types.MethodType(q_is_valid, inst)
     inst.__str__ = types.MethodType(q__str__, inst)
     inst.__repr__ = types.MethodType(q__repr__, inst)
     return inst
@@ -111,6 +112,9 @@ def q_invalidate(self, changed_parent=None):
     else:
         #print(self.name)
         pass
+
+def q_is_valid(self):
+    return self.state == PState.VALID
 
 def q_has_range(self):
     return (not (self.min_value is None)) and (not (self.max_value is None))
@@ -237,6 +241,8 @@ h.set_update_fn(lambda: Fb / Fp)
 
 for param in parameters.values():
     param.update()
+    if param.state == PState.INIT:
+        param.state = PState.VALID
 
 driver1_parameters = [
     Xmax, Vd, Sd, Bl, Re, Mmd, Mms, Mas, Rms, Ras, Cms, Cas, Vas, Rg
