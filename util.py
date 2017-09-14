@@ -6,6 +6,9 @@ def float_or_none(x):
     except ValueError:
         return None
 
+def not_none(thing):
+    return not (thing is None)
+
 def pairs(iterable):
     return grouped(iterable, 2)
 

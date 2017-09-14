@@ -70,16 +70,17 @@ class ParamWidget(tk.Frame):
         self.slider.grid(row=1, columnspan=3)
     
     def set_entry(self, value, set_slider=False):
-        if (value > self.param.get_max()) or (value < self.param.get_min()):
-            self.label.configure(fg='red')
-            return
-        elif set_slider:
+        if set_slider:
             self.param.on_change(value)
             self.ignore_slider = True
             self.slider.set(value)
         else:
             self.entry.delete(0, tk.END)
             self.entry.insert(0, str(value)[:6])
+    
+        if (value > self.param.get_max()) or (value < self.param.get_min()):
+            self.label.configure(fg='red')
+            return
 
     def make_param_validator(self, param):
         def validate_cmd(action, text):

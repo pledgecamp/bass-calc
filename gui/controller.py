@@ -8,14 +8,22 @@ class ParamController:
 
     def __init__(self, param):
         self.param = param
+        param.update_callback = self.on_update
 
+    # Value changed from GUI
     def on_change(self, value):
         print("{} change to {}".format(self.get_name(), value))
         self.param.set_value(value, self.get_units())
-        for c in self.param.children:
-            c.invalidate(self.param)
+        self.param.invalidate()
+        self.param.update_parents()
         if not (ParamController.param_changed_callback is None):
             ParamController.param_changed_callback(self.param, value)
+        check_valid()
+
+    # Parameter value updated (likely due to cascading update) 
+    def on_update(self, param):
+        self.widget.set_entry(param.m.real)
+        self.widget.set_entry(param.m.real, set_slider=True)
     
     def set_widget(self, widget):
         self.widget = widget

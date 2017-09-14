@@ -2,6 +2,7 @@ from enum import Enum
 from math import pi
 from numpy import sqrt
 import types
+from util import not_none
 from pint.compat import string_types
 from pint import UnitRegistry
 ureg = UnitRegistry()
@@ -44,10 +45,10 @@ def Parameter(name, initial=0, min_value=None, max_value=None):
     inst.set = types.MethodType(q_set, inst)
     inst.set_to = types.MethodType(q_set_to, inst)
     inst.set_quantity_str = types.MethodType(q_set_quantity_str, inst)
-    inst.add_children = types.MethodType(q_add_children, inst)
     inst.update = types.MethodType(q_update, inst)
     inst.set_quantity = types.MethodType(q_set_quantity, inst)
     inst.invalidate = types.MethodType(q_invalidate, inst)
+    inst.update_parents = types.MethodType(q_update_parents, inst)
     inst.has_range = types.MethodType(q_has_range, inst)
     inst.debug_units = types.MethodType(q_debug_units, inst)
     inst.set_update_fn = types.MethodType(q_set_update_fn, inst)
@@ -57,15 +58,18 @@ def Parameter(name, initial=0, min_value=None, max_value=None):
     inst.__repr__ = types.MethodType(q__repr__, inst)
     return inst
 
+# Helper for updating value and range
 def q_set(self, value, min_, max_, units):
     self.set_to(Q_(value, units))
     self.min_value = Q_(min_, units)
     self.max_value = Q_(max_, units)
 
+# Set to another Quantity
 def q_set_to(self, other_quantity):
     self._magnitude = other_quantity.magnitude
     self._units = other_quantity._units
 
+# 
 def q_set_value(self, value, units):
     other = value * ureg(units)
     self.set_to(other)
@@ -74,11 +78,6 @@ def q_set_quantity_str(self, value_str):
     if not isinstance(value_str, str):
         raise ParameterException('Expected string')
     self.set_quantity(Q_(value_str))
-
-def q_add_children(self, *others):
-    for other in others:
-        self.children.append(other)
-        other.parents.append(self)
 
 def q_update(self):
     self.set_quantity(self.update_fn())
@@ -89,6 +88,7 @@ def q_set_update_fn(self, update_fn):
         child = parameters.get(child_name)
         if child:
             self.children.append(child)
+            child.parents.append(self)
         elif child_name in ['pi', 'pi2', 'sqrt']:
             pass
         else:
@@ -96,28 +96,43 @@ def q_set_update_fn(self, update_fn):
 
 def q_set_quantity(self, value):
     self.set_to(value)
+    self.invalidate(changed_parent=self)
     self.state = PState.VALID
-    for child in self.children:
-        child.invalidate(self)
 
-def q_invalidate(self, changed_parent=None):
+def q_invalidate(self, changed_parent=None, trigger_child=None):
     # Stops infinite recursion. TODO -- check if infinite recursion is a bug
+    #print("INV {}: {}", self.name, [c.name for c in self.children])
     if self.state != PState.INVALID:
         self.state = PState.INVALID
         for parent in self.parents:
             if parent != changed_parent:
                 parent.invalidate()
         for child in self.children:
-            child.invalidate(self)
+            if child != trigger_child:
+                child.invalidate(self)
     else:
         #print(self.name)
         pass
+
+def q_update_parents(self):
+    for parent in self.parents:
+        # Directly update parent's value
+        parent.set_to(parent.update_fn())
+        print("Updated parent {}".format(parent.name))
+        old_parent_state = parent.state
+        # Invalidate parent's other children
+        parent.invalidate(trigger_child=self)
+        # Restore parent's state
+        parent.state = old_parent_state
+        # Let listener know 'parent' has updated due to cascade
+        if not_none(parent.update_callback):
+            parent.update_callback(parent)
 
 def q_is_valid(self):
     return self.state == PState.VALID
 
 def q_has_range(self):
-    return (not (self.min_value is None)) and (not (self.max_value is None))
+    return not_none(self.min_value) and not_none(self.max_value)
 
 def q_debug_units(self, space=""):
     debug = "{}: {}{}".format(self.name, space, self.to_base_units())
