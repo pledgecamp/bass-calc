@@ -136,6 +136,7 @@ def Leaf(name, initial, min_value=None, max_value=None):
 # Environmental parameters
 ρ0 = Leaf('ρ0', '1.1839 kg / m**3', '1 kg / m**3', '1.4 kg / m**3') # density of air at 1atm and 25C
 c = Leaf('c', '345 m/s', '340 m/s', '350 m/s') # speed of sound
+t = Leaf('t', '1s', '1s', '1s')
 
 # Driver low level parameters
 Xmax = Leaf('Xmax', '3mm', '0mm', '100mm')
@@ -251,7 +252,7 @@ enclosure_parameters = [
     Vb, Cab, ωb, Fb, Tb, α, δ, y, h, η0
 ]
 constant_parameters = [
-    ρ0, c
+    ρ0, c, t
 ]
 
 if __name__ == '__main__':
