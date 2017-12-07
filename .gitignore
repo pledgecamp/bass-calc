@@ -6,3 +6,8 @@ dist/
 setup.py
 
 .DS_Store
+
+# Rust
+Cargo.lock
+target/
+**/*.rs.bk

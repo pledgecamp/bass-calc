@@ -160,7 +160,7 @@ t = Leaf('t', '1s', '1s', '1s')
 # Driver low level parameters
 Xmax = Leaf('Xmax', '3mm', '0mm', '100mm')
 Vd = Parameter('Vd', '0.1 liter', '0.1liter', '100liter')
-Sd = Leaf('Sd', '10 cm ** 2', '1cm**2', '1000cm**2')   
+Sd = Leaf('Sd', '10 cm ** 2', '1cm**2', '1000cm**2')
 Bl = Leaf('Bl', '1 tesla meter', '0.1 tesla meter', '20 tesla meter')
 Re = Leaf('Re', '4 ohm', '0.1ohm', '1000 ohm')
 Mmd = Leaf('Mmd', '10g', '1 gram', '1kg')
