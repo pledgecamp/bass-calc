@@ -5,69 +5,8 @@ use conrod::glium::glutin;
 use conrod::backend::glium::glium::Surface;
 use std;
 
-widget_ids! {
-    struct Ids {
-        root,
-        header,
-        title,
-        body,
-        param_column,
-        param_title,
-        param_tabs,
-        tabs_scrollbar,
-        tab_driver,
-        tab_passive,
-        tab_enclosure,
-        tab_constant,
-        driver_label,
-        passive_label,
-        enclosure_label,
-        constant_label,
-        graph_column,
-    }
-}
-
-// Draw the Ui.
-fn set_widgets(ref mut ui: conrod::UiCell, ids: &mut Ids) {
-    use conrod::{color, widget, Colorable, Positionable, Sizeable, Widget};
-    use conrod::widget::{Text};
-
-    // Construct our main `Canvas` tree.
-    widget::Canvas::new().flow_down(&[
-        (ids.header, widget::Canvas::new().color(color::BLUE).pad_bottom(20.0)),
-        (ids.body, widget::Canvas::new().length(300.0).flow_right(&[
-            (ids.param_column, widget::Canvas::new().color(color::LIGHT_ORANGE).pad(20.0)),
-            (ids.graph_column, widget::Canvas::new().color(color::DARK_ORANGE).pad(20.0)),
-        ])),
-    ]).set(ids.root, ui);
-
-    widget::Tabs::new(&[(ids.tab_driver, "Driver"), (ids.tab_passive, "Passive"),
-                        (ids.tab_enclosure, "Enclosure"), (ids.tab_constant, "Constants")])
-        .wh_of(ids.param_column)
-        .color(color::BLUE)
-        .label_color(color::WHITE)
-        .middle_of(ids.param_column)
-        .set(ids.param_tabs, ui);
-    // A scrollbar for the tabs.
-    widget::Scrollbar::y_axis(ids.param_tabs).auto_hide(true).set(ids.tabs_scrollbar, ui);
-
-    Text::new("Bass Calc")
-        .color(color::LIGHT_ORANGE)
-        .font_size(48)
-        .middle_of(ids.header)
-        .set(ids.title, ui);
-
-    Text::new("Parameters")
-        .color(color::LIGHT_ORANGE.complement())
-        .top_left_of(ids.param_column)
-        .set(ids.param_title, ui);
-
-    fn text (text: Text) -> Text { text.color(color::WHITE).font_size(36) }
-    text(Text::new("Driver")).middle_of(ids.tab_driver).set(ids.driver_label, ui);
-    text(Text::new("Enclosure")).middle_of(ids.tab_enclosure).set(ids.enclosure_label, ui);
-    text(Text::new("Passive")).middle_of(ids.tab_passive).set(ids.passive_label, ui);
-    text(Text::new("Constants")).middle_of(ids.tab_constant).set(ids.constant_label, ui);
-}
+mod app;
+use self::app::*;
 
 #[cfg(feature="glium")]
 struct EventLoop {
@@ -129,7 +68,7 @@ pub fn draw_loop() {
     use conrod::glium::{Display, glutin};
     use conrod::glium::glutin::{ContextBuilder, WindowBuilder};
 
-    const WIDTH: u32 = 900;
+    const WIDTH: u32 = 1000;
     const HEIGHT: u32 = 600;
 
     // Build the window.
@@ -191,7 +130,7 @@ pub fn draw_loop() {
         }
 
         // Instantiate all widgets in the GUI.
-        set_widgets(ui.set_widgets(), ids);
+        set_widgets(ui.set_widgets(), ids, (WIDTH, HEIGHT));
 
         // Render the `Ui` and then display it on the screen.
         if let Some(primitives) = ui.draw_if_changed() {

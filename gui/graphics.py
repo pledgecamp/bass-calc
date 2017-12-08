@@ -170,5 +170,6 @@ class BassGraph(Figure):
         self.mag = mag
         self.phase = phase
         self.plot.cla()
+        print("WWW {}", w)
         self.plot.plot(w, mag, 'b')
 
