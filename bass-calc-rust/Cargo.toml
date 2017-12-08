@@ -5,3 +5,14 @@ authors = ["Sam Pullman <sampullman@gmail.com>"]
 
 [dependencies]
 dimensioned = "0.6.0"
+find_folder = "0.3.0"
+conrod_derive = "0.1"
+glium = { version = "0.18.0", optional = true }
+winit = { version = "0.8.3", optional = true }
+
+[dependencies.conrod]
+version = "0.56.0"
+features = ["glium", "winit"]
+
+[features]
+piston = ["glium", "winit"]
