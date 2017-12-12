@@ -83,6 +83,8 @@ impl AppInterface for BassCalcApp {
         // A scrollbar for the tabs.
         Scrollbar::y_axis(ids.param_tabs).auto_hide(true).set(ids.tabs_scrollbar, ui);
 
+        fn text (text: &str, size: u32) -> Text { Text::new(text).color(color::WHITE).font_size(size) }
+
         let mut list = vec![true; 4];
         let (mut items, scrollbar) = List::flow_down(list.len())
                 .item_size(50.0)
@@ -93,19 +95,12 @@ impl AppInterface for BassCalcApp {
 
         while let Some(item) = items.next(ui) {
             let i = item.i;
-            let label = format!("item {}: {}", i, list[i]);
-            let toggle = widget::Toggle::new(list[i])
-                .label(&label)
-                .label_color(color::WHITE)
-                .color(color::LIGHT_BLUE);
-            for v in item.set(toggle, ui) {
-                list[i] = v;
-            }
+            let title_text = format!("item {}: {}", i, list[i]);
+            let title = text(&title_text, 18);
+            item.set(title, ui);
         }
 
-
-        fn text (text: Text) -> Text { text.color(color::WHITE).font_size(36) }
-        text(Text::new("Graph")).middle_of(ids.tab_graph).set(ids.tab_graph_label, ui);
+        text("Graph", 36).middle_of(ids.tab_graph).set(ids.tab_graph_label, ui);
 
         let min_x = 0.0;
         let max_x = f64::consts::PI * 2.0;

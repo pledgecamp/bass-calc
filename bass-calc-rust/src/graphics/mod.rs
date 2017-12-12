@@ -114,11 +114,11 @@ impl<T> App<T> where T: AppInterface {
         'main: loop {
 
             let events = self.next_event();
+
+            self.ui_needs_update = false;
+            self.last_update = std::time::Instant::now();
             // Handle all events.
             for event in events {
-
-                self.ui_needs_update = false;
-                self.last_update = std::time::Instant::now();
 
                 // Use the `winit` backend feature to convert the winit event to a conrod one.
                 if let Some(event) = winit::convert_event(event.clone(), &self.display) {
