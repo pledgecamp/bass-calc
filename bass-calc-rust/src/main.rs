@@ -15,6 +15,7 @@ use graphics::*;
 #[cfg(all(feature="winit", feature="glium"))]
 fn main() {
     let P = default_parameters();
-
-    draw_loop();
+    
+    let mut app = app::make_app();
+    app.run();
 }

@@ -1,31 +1,81 @@
 use conrod;
 use find_folder;
-use conrod::glium;
-use conrod::glium::glutin;
+use conrod::{Ui, UiCell};
+use conrod::{image, glium};
+use conrod::backend::winit;
 use conrod::backend::glium::glium::Surface;
+use conrod::backend::glium::Renderer;
+use conrod::glium::{Display, glutin};
+use conrod::glium::texture::Texture2d;
+use conrod::glium::glutin::{ContextBuilder, WindowBuilder};
 use std;
 
-mod app;
-use self::app::*;
+pub mod app;
+
+pub trait AppInterface {
+    fn initialize(&mut self, &mut Ui);
+    fn draw(&mut self, &mut UiCell, (u32, u32));
+}
 
 #[cfg(feature="glium")]
-struct EventLoop {
+pub struct App<T: AppInterface> {
+    events_loop: glutin::EventsLoop,
+    image_map: image::Map<Texture2d>,
+    renderer: Renderer,
+    display: Display,
+    ui: Ui,
+    app_interface: T,
+    window_size: (u32, u32),
     ui_needs_update: bool,
     last_update: std::time::Instant,
 }
 
 #[cfg(feature="glium")]
-impl EventLoop {
+impl<T> App<T> where T: AppInterface {
 
-    fn new() -> Self {
-        EventLoop {
+    pub fn new(title: &str, window_size: (u32, u32), mut interface: T) -> App<T> {
+
+        let (WIDTH, HEIGHT) = window_size;
+
+        // Build the window.
+        let events_loop = glutin::EventsLoop::new();
+        let window = WindowBuilder::new()
+            .with_title(title)
+            .with_dimensions(WIDTH, HEIGHT);
+        let context = ContextBuilder::new()
+            .with_vsync(true)
+            .with_multisampling(4);
+        let display = Display::new(window, context, &events_loop).unwrap();
+
+        // construct our `Ui`.
+        let mut ui = conrod::UiBuilder::new([WIDTH as f64, HEIGHT as f64]).build();
+
+        // Add a `Font` to the `Ui`'s `font::Map` from file.
+        let assets = find_folder::Search::KidsThenParents(3, 5).for_folder("assets").unwrap();
+        let font_path = assets.join("fonts/NotoSans-Regular.ttf");
+        ui.fonts.insert_from_file(font_path).unwrap();
+
+        // A type used for converting `conrod::render::Primitives` into `Command`s that can be used
+        // for drawing to the glium `Surface`.
+        let renderer = Renderer::new(&display).unwrap();
+
+        interface.initialize(&mut ui);
+
+        App {
+            events_loop: events_loop,
+            image_map: image::Map::new(),
+            renderer: renderer,
+            display: display,
+            ui: ui,
+            app_interface: interface,
+            window_size: window_size,
             last_update: std::time::Instant::now(),
             ui_needs_update: true,
         }
     }
 
     /// Produce an iterator yielding all available events.
-    fn next(&mut self, events_loop: &mut glutin::EventsLoop) -> Vec<glium::glutin::Event> {
+    fn next_event(&mut self) -> Vec<glium::glutin::Event> {
         // We don't want to loop any faster than 60 FPS, so wait until it has been at least 16ms
         // since the last yield.
         let last_update = self.last_update;
@@ -37,18 +87,15 @@ impl EventLoop {
 
         // Collect all pending events.
         let mut events = Vec::new();
-        events_loop.poll_events(|event| events.push(event));
+        self.events_loop.poll_events(|event| events.push(event));
 
         // If there are no events and the `Ui` does not need updating, wait for the next event.
         if events.is_empty() && !self.ui_needs_update {
-            events_loop.run_forever(|event| {
+            self.events_loop.run_forever(|event| {
                 events.push(event);
                 glium::glutin::ControlFlow::Break
             });
         }
-
-        self.ui_needs_update = false;
-        self.last_update = std::time::Instant::now();
 
         events
     }
@@ -62,83 +109,51 @@ impl EventLoop {
         self.ui_needs_update = true;
     }
 
-}
+    pub fn run(&mut self) {
 
-pub fn draw_loop() {
-    use conrod::glium::{Display, glutin};
-    use conrod::glium::glutin::{ContextBuilder, WindowBuilder};
+        'main: loop {
 
-    const WIDTH: u32 = 1000;
-    const HEIGHT: u32 = 600;
+            let events = self.next_event();
+            // Handle all events.
+            for event in events {
 
-    // Build the window.
-    let mut events_loop = glutin::EventsLoop::new();
-    let window = WindowBuilder::new()
-        .with_title("Bass Calc")
-        .with_dimensions(WIDTH, HEIGHT);
-    let context = ContextBuilder::new()
-        .with_vsync(true)
-        .with_multisampling(4);
-    let display = Display::new(window, context, &events_loop).unwrap();
+                self.ui_needs_update = false;
+                self.last_update = std::time::Instant::now();
 
-    // construct our `Ui`.
-    let mut ui = conrod::UiBuilder::new([WIDTH as f64, HEIGHT as f64]).build();
+                // Use the `winit` backend feature to convert the winit event to a conrod one.
+                if let Some(event) = winit::convert_event(event.clone(), &self.display) {
+                    self.ui.handle_event(event);
+                    self.needs_update();
+                }
 
-    // Add a `Font` to the `Ui`'s `font::Map` from file.
-    let assets = find_folder::Search::KidsThenParents(3, 5).for_folder("assets").unwrap();
-    let font_path = assets.join("fonts/NotoSans/NotoSans-Regular.ttf");
-    ui.fonts.insert_from_file(font_path).unwrap();
-
-    // A type used for converting `conrod::render::Primitives` into `Command`s that can be used
-    // for drawing to the glium `Surface`.
-    let mut renderer = conrod::backend::glium::Renderer::new(&display).unwrap();
-
-    // The image map describing each of our widget->image mappings (in our case, none).
-    let image_map = conrod::image::Map::<glium::texture::Texture2d>::new();
-
-    // Instantiate the generated list of widget identifiers.
-    let ids = &mut Ids::new(ui.widget_id_generator());
-
-    // Poll events from the window.
-    let mut event_loop = EventLoop::new();
-    'main: loop {
-
-        // Handle all events.
-        for event in event_loop.next(&mut events_loop) {
-
-            // Use the `winit` backend feature to convert the winit event to a conrod one.
-            if let Some(event) = conrod::backend::winit::convert_event(event.clone(), &display) {
-                ui.handle_event(event);
-                event_loop.needs_update();
-            }
-
-            match event {
-                glium::glutin::Event::WindowEvent { event, .. } => match event {
-                    // Break from the loop upon `Escape`.
-                    glium::glutin::WindowEvent::Closed |
-                    glium::glutin::WindowEvent::KeyboardInput {
-                        input: glium::glutin::KeyboardInput {
-                            virtual_keycode: Some(glium::glutin::VirtualKeyCode::Escape),
+                match event {
+                    glium::glutin::Event::WindowEvent { event, .. } => match event {
+                        // Break from the loop upon `Escape`.
+                        glium::glutin::WindowEvent::Closed |
+                        glium::glutin::WindowEvent::KeyboardInput {
+                            input: glium::glutin::KeyboardInput {
+                                virtual_keycode: Some(glium::glutin::VirtualKeyCode::Escape),
+                                ..
+                            },
                             ..
-                        },
-                        ..
-                    } => break 'main,
+                        } => break 'main,
+                        _ => (),
+                    },
                     _ => (),
-                },
-                _ => (),
+                }
             }
-        }
 
-        // Instantiate all widgets in the GUI.
-        set_widgets(ui.set_widgets(), ids, (WIDTH, HEIGHT));
+            // Instantiate all widgets in the GUI.
+            self.app_interface.draw(&mut self.ui.set_widgets(), self.window_size);
 
-        // Render the `Ui` and then display it on the screen.
-        if let Some(primitives) = ui.draw_if_changed() {
-            renderer.fill(&display, primitives, &image_map);
-            let mut target = display.draw();
-            target.clear_color(0.0, 0.0, 0.0, 1.0);
-            renderer.draw(&display, &mut target, &image_map).unwrap();
-            target.finish().unwrap();
+            // Render the `Ui` and then display it on the screen.
+            if let Some(primitives) = self.ui.draw_if_changed() {
+                self.renderer.fill(&self.display, primitives, &self.image_map);
+                let mut target = self.display.draw();
+                target.clear_color(0.0, 0.0, 0.0, 1.0);
+                self.renderer.draw(&self.display, &mut target, &self.image_map).unwrap();
+                target.finish().unwrap();
+            }
         }
     }
 }
