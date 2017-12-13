@@ -298,7 +298,7 @@ pub fn default_parameters() -> Parameters {
         Rms: param_simple("Rms", "N * s / m", 4.0, 0.0, 1000.0),
         Ras: param("Ras", "ohm", 1.0, 0.0, 1000.0, ras_update),
         Cms: param_simple("Cms", "meter / N", 1.0, 0.1, 1000.0),
-        Cas: param("Cas", "1 meter**5 / N", 1.0, 0.0, 100.0, cas_update),
+        Cas: param("Cas", "meter**5 / N", 1.0, 0.0, 100.0, cas_update),
         Vas: param("Vas", "liter", 1.0, 0.0, 100.0, vas_update),
 
         Rg: param_simple("Rg", "", 0.0, 0.0, 1000.0),
@@ -327,13 +327,13 @@ pub fn default_parameters() -> Parameters {
         // Passive radiator mid level parameters
         Qmp: param("Qmp", "", 0.5, 0.0, 30.0, qmp_update),
         ωp: param("ωp", "Hz", 20.0, 0.0, 1000.0, ωp_update),
-        Fp: param("Fp", "120Hz", 120.0, 0.0, 6282.0, fp_update),
-        Tp: param("Tp", "0.05s", 0.05, 0.0, 0.1, tp_update),
+        Fp: param("Fp", "Hz", 120.0, 0.0, 6282.0, fp_update),
+        Tp: param("Tp", "s", 0.05, 0.0, 0.1, tp_update),
 
         // Enclosure parameters
         ωb: param("ωb", "Hz", 20.0, 0.0, 1000.0, ωb_update),
-        Fb: param("Fb", "120Hz", 120.0, 0.0, 6282.0, fb_update),
-        Tb: param("Tb", "0.05s", 0.05, 0.0, 0.1, tb_update),
+        Fb: param("Fb", "Hz", 120.0, 0.0, 6282.0, fb_update),
+        Tb: param("Tb", "s", 0.05, 0.0, 0.1, tb_update),
 
         α: param("α", "", 3.0, 0.0, 100.0, α_update),
         δ: param("δ", "", 7.0, 0.0, 100.0, δ_update),

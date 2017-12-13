@@ -5,9 +5,8 @@ use graphics::{App, AppInterface};
 use parameters::{Param, Parameters};
 
 use conrod::{color, widget, Colorable, Positionable, Sizeable, Widget};
-use conrod::widget::{Canvas, List, Scrollbar, Tabs, Text};
-use conrod::widget::id;
-use conrod::widget::list;
+use conrod::color::rgb;
+use conrod::widget::{id, list, Canvas, Rectangle, List, Scrollbar, Tabs, Text};
 use conrod::widget::list::{Down, Fixed};
 
 pub struct BassCalcApp {
@@ -48,31 +47,41 @@ impl BassCalcApp {
     }
 
     fn draw_list_title(&self, title: &str, ui: &mut UiCell,
-                       item: &list::Item<Down, Fixed>) {
+                       item: &list::Item<Down, Fixed>, w: f64) {
 
-        let title_id = {
+        let (title_id, line_id) = {
             let mut id_gen = ui.widget_id_generator();
-            id_gen.next()
+            (id_gen.next(), id_gen.next())
         };
-        item.set(Canvas::new().pad(20.0).color(color::BLUE), ui);
+        item.set(Canvas::new().color(color::DARK_CHARCOAL), ui);
+
+        Rectangle::fill([w, 1.0])
+            .mid_bottom_of(item.widget_id)
+            .color(rgb(0.3, 0.3, 0.3))
+            .set(line_id, ui);
 
         let _ = text(title, 22).middle_of(item.widget_id).set(title_id, ui);
     }
 
     fn draw_list_param(&self, ui: &mut UiCell, item: &list::Item<Down, Fixed>,
-                       param: &Param) {
+                       param: &Param, w: f64) {
 
-        let (name_id, range_id, entry_id, unit_id)  = {
+        let (name_id, range_id, entry_id, unit_id, line_id)  = {
             let mut id_gen = ui.widget_id_generator();
-            (id_gen.next(), id_gen.next(), id_gen.next(), id_gen.next())
+            (id_gen.next(), id_gen.next(), id_gen.next(), id_gen.next(), id_gen.next())
         };
-        item.set(Canvas::new().pad(20.0).color(color::BLACK), ui);
+        item.set(Canvas::new().color(color::BLACK), ui);
+
+        Rectangle::fill([w, 1.0])
+            .mid_bottom_of(item.widget_id)
+            .color(rgb(0.1, 0.1, 0.1))
+            .set(line_id, ui);
 
         text(&param.name, 17).mid_left_of(item.widget_id).set(name_id, ui);
         text(&param.unit, 17).right_from(name_id, 10.0).set(unit_id, ui);
     }
 
-    fn draw_params(&self, ui: &mut UiCell) {
+    fn draw_params(&self, ui: &mut UiCell, w: f64) {
         let ref ids = self.ids.as_ref().unwrap();
 
         let driver = self.params.driver_params();
@@ -94,21 +103,21 @@ impl BassCalcApp {
         while let Some(item) = items.next(ui) {
             let i = item.i;
             if i == 0 {
-                self.draw_list_title("Driver", ui, &item);
+                self.draw_list_title("Driver", ui, &item, w);
             } else if i < len1 {
-                self.draw_list_param(ui, &item, driver[i - 1]);
+                self.draw_list_param(ui, &item, driver[i - 1], w);
             } else if i == len1 {
-                self.draw_list_title("Passive", ui, &item);
+                self.draw_list_title("Passive", ui, &item, w);
             } else if i < len2 {
-                self.draw_list_param(ui, &item, passive[i - (len1+1)]);
+                self.draw_list_param(ui, &item, passive[i - (len1+1)], w);
             } else if i == len2 {
-                self.draw_list_title("Enclosure", ui, &item);
+                self.draw_list_title("Enclosure", ui, &item, w);
             } else if i < len3 {
-                self.draw_list_param(ui, &item, enclosure[i - (len2+1)]);
+                self.draw_list_param(ui, &item, enclosure[i - (len2+1)], w);
             } else if i == len3 {
-                self.draw_list_title("Constants", ui, &item);
+                self.draw_list_title("Constants", ui, &item, w);
             } else if i < len4 {
-                self.draw_list_param(ui, &item, constants[i - (len3+1)]);
+                self.draw_list_param(ui, &item, constants[i - (len3+1)], w);
             } else {
                 println!("Invalid list index {}", i);
             }
@@ -127,14 +136,15 @@ impl AppInterface for BassCalcApp {
     }
 
     fn draw(&mut self, ui: &mut UiCell, size: (u32, u32)) {
-        {
-        let ref ids = self.ids.as_mut().unwrap();
 
         let (W, H) = size;
 
         let width = W as f64;
         let param_w = width / 4.0;
         let height = H as f64;
+
+        {
+        let ref ids = self.ids.as_mut().unwrap();
 
         // Construct our main `Canvas` tree.
         Canvas::new().flow_down(&[
@@ -188,7 +198,7 @@ impl AppInterface for BassCalcApp {
             .middle_of(ids.graph_column)
             .set(ids.graph, ui);
         }
-        self.draw_params(ui);
 
+        self.draw_params(ui, param_w);
     }
 }
