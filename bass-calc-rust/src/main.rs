@@ -1,4 +1,5 @@
 #![feature(non_ascii_idents)]
+#![feature(exclusive_range_pattern)]
 #![allow(non_snake_case)]
 #[macro_use] extern crate conrod;
 #[macro_use] extern crate conrod_derive;
@@ -16,6 +17,6 @@ use graphics::*;
 fn main() {
     let P = default_parameters();
     
-    let mut app = app::make_app();
+    let mut app = app::make_app(P);
     app.run();
 }

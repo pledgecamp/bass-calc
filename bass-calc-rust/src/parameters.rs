@@ -9,13 +9,13 @@ use dim::si::*;
 const PI2: f64 = 2.0 * PI;
 
 /// Parameter that depends on one or more children
-struct ParamPrivate {
-    name: String,
-    unit: String,
+pub struct ParamPrivate {
+    pub name: String,
+    pub unit: String,
     value: Cell<f64>,
-    min: f64,
-    max: f64,
-    update_fn: Option<fn(&Parameters) -> f64>,
+    pub min: f64,
+    pub max: f64,
+    pub update_fn: Option<fn(&Parameters) -> f64>,
     children: RefCell<Vec<Param>>,
     parents: RefCell<Vec<Param>>,
 }
@@ -36,7 +36,7 @@ impl ParamPrivate {
     }
 }
 
-type Param = Rc<ParamPrivate>;
+pub type Param = Rc<ParamPrivate>;
 
 #[allow(non_snake_case)]
 pub struct Parameters {
@@ -99,6 +99,28 @@ pub struct Parameters {
     y: Param,
     h: Param,
     η0: Param,
+}
+
+impl Parameters {
+    pub fn driver_params(&self) -> [&Param; 23] {
+        [&self.Xmax, &self.Vd, &self.Sd, &self.Bl, &self.Re, &self.Mmd, &self.Mms,
+         &self.Mas, &self.Rms, &self.Ras, &self.Cms, &self.Cas, &self.Vas, &self.Rg,
+         &self.Ts, &self.ωs, &self.Fs, &self.Qes, &self.Qms, &self.Qts, &self.Qs,
+         &self.Cab, &self.Vb]
+    }
+
+    pub fn passive_params(&self) -> [&Param; 12] {
+        [&self.Vap, &self.Cmp, &self.Cap, &self.Rmp, &self.Rap, &self.Mmp, &self.Map,
+         &self.Sp, &self.Qmp, &self.ωp, &self.Fp, &self.Tp]
+    }
+
+    pub fn enclosure_params(&self) -> [&Param; 8] {
+        [&self.ωb, &self.Fb, &self.Tb, &self.α, &self.δ, &self.y, &self.h, &self.η0]
+    }
+
+    pub fn constant_params(&self) -> [&Param; 3] {
+        [&self.ρ0, &self.c, &self.t]
+    }
 }
 
 fn param_simple(name: &str, unit: &str, value: f64, min: f64, max: f64) -> Param {

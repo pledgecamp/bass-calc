@@ -1,11 +1,18 @@
 
-use conrod;
 use conrod::{Ui, UiCell};
 use std::f64;
 use graphics::{App, AppInterface};
+use parameters::{Param, Parameters};
+
+use conrod::{color, widget, Colorable, Positionable, Sizeable, Widget};
+use conrod::widget::{Canvas, List, Scrollbar, Tabs, Text};
+use conrod::widget::id;
+use conrod::widget::list;
+use conrod::widget::list::{Down, Fixed};
 
 pub struct BassCalcApp {
     ids: Option<Ids>,
+    params: Parameters,
 }
 
 widget_ids! {
@@ -26,18 +33,91 @@ widget_ids! {
     }
 }
 
-pub fn make_app() -> App<BassCalcApp> {
-    let app_data = BassCalcApp::new();
+pub fn make_app(params: Parameters) -> App<BassCalcApp> {
+    let app_data = BassCalcApp::new(params);
     App::new("Bass Calc", (1200, 600), app_data)
 }
 
 impl BassCalcApp {
 
-    pub fn new() -> BassCalcApp {
+    pub fn new(params: Parameters) -> BassCalcApp {
         BassCalcApp {
             ids: None,
+            params: params,
         }
     }
+
+    fn draw_list_title(&self, title: &str, ui: &mut UiCell,
+                       item: &list::Item<Down, Fixed>) {
+
+        let title_id = {
+            let mut id_gen = ui.widget_id_generator();
+            id_gen.next()
+        };
+        item.set(Canvas::new().pad(20.0).color(color::BLUE), ui);
+
+        let _ = text(title, 22).middle_of(item.widget_id).set(title_id, ui);
+    }
+
+    fn draw_list_param(&self, ui: &mut UiCell, item: &list::Item<Down, Fixed>,
+                       param: &Param) {
+
+        let (name_id, range_id, entry_id, unit_id)  = {
+            let mut id_gen = ui.widget_id_generator();
+            (id_gen.next(), id_gen.next(), id_gen.next(), id_gen.next())
+        };
+        item.set(Canvas::new().pad(20.0).color(color::BLACK), ui);
+
+        text(&param.name, 17).mid_left_of(item.widget_id).set(name_id, ui);
+        text(&param.unit, 17).right_from(name_id, 10.0).set(unit_id, ui);
+    }
+
+    fn draw_params(&self, ui: &mut UiCell) {
+        let ref ids = self.ids.as_ref().unwrap();
+
+        let driver = self.params.driver_params();
+        let passive = self.params.passive_params();
+        let enclosure = self.params.enclosure_params();
+        let constants = self.params.constant_params();
+        let len1 = driver.len() + 1;
+        let len2 = len1 + passive.len() + 1;
+        let len3 = len2 + enclosure.len() + 1;
+        let len4 = len3 + constants.len() + 1;
+        
+        let (mut items, scrollbar) = List::flow_down(len4)
+                .item_size(38.0)
+                .scrollbar_on_top()
+                .middle_of(ids.tab_driver)
+                .wh_of(ids.tab_driver)
+                .set(ids.tab_driver_list, ui);
+
+        while let Some(item) = items.next(ui) {
+            let i = item.i;
+            if i == 0 {
+                self.draw_list_title("Driver", ui, &item);
+            } else if i < len1 {
+                self.draw_list_param(ui, &item, driver[i - 1]);
+            } else if i == len1 {
+                self.draw_list_title("Passive", ui, &item);
+            } else if i < len2 {
+                self.draw_list_param(ui, &item, passive[i - (len1+1)]);
+            } else if i == len2 {
+                self.draw_list_title("Enclosure", ui, &item);
+            } else if i < len3 {
+                self.draw_list_param(ui, &item, enclosure[i - (len2+1)]);
+            } else if i == len3 {
+                self.draw_list_title("Constants", ui, &item);
+            } else if i < len4 {
+                self.draw_list_param(ui, &item, constants[i - (len3+1)]);
+            } else {
+                println!("Invalid list index {}", i);
+            }
+        }
+    }
+}
+
+fn text(text: &str, size: u32) -> Text {
+    Text::new(text).color(color::WHITE).font_size(size)
 }
 
 impl AppInterface for BassCalcApp {
@@ -47,10 +127,7 @@ impl AppInterface for BassCalcApp {
     }
 
     fn draw(&mut self, ui: &mut UiCell, size: (u32, u32)) {
-
-        use conrod::{color, widget, Colorable, Labelable, Positionable, Sizeable, Widget};
-        use conrod::widget::{Canvas, List, Scrollbar, Tabs, Text};
-
+        {
         let ref ids = self.ids.as_mut().unwrap();
 
         let (W, H) = size;
@@ -83,23 +160,6 @@ impl AppInterface for BassCalcApp {
         // A scrollbar for the tabs.
         Scrollbar::y_axis(ids.param_tabs).auto_hide(true).set(ids.tabs_scrollbar, ui);
 
-        fn text (text: &str, size: u32) -> Text { Text::new(text).color(color::WHITE).font_size(size) }
-
-        let mut list = vec![true; 4];
-        let (mut items, scrollbar) = List::flow_down(list.len())
-                .item_size(50.0)
-                .scrollbar_on_top()
-                .middle_of(ids.tab_driver)
-                .wh_of(ids.tab_driver)
-                .set(ids.tab_driver_list, ui);
-
-        while let Some(item) = items.next(ui) {
-            let i = item.i;
-            let title_text = format!("item {}: {}", i, list[i]);
-            let title = text(&title_text, 18);
-            item.set(title, ui);
-        }
-
         text("Graph", 36).middle_of(ids.tab_graph).set(ids.tab_graph_label, ui);
 
         let min_x = 0.0;
@@ -127,6 +187,8 @@ impl AppInterface for BassCalcApp {
             .wh_of(ids.graph_column)
             .middle_of(ids.graph_column)
             .set(ids.graph, ui);
+        }
+        self.draw_params(ui);
 
     }
 }
