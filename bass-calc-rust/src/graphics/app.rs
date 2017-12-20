@@ -133,7 +133,7 @@ impl BassCalcApp {
         canvas_id
     }
 
-    fn draw_list_params(&self, ui: &mut UiCell, ids_index: usize, params: &[&Param], list_id: Id,
+    fn draw_list_params(&self, ui: &mut UiCell, ids_index: usize, params: &[Param], list_id: Id,
                         prev_id: Id, w: f64, h: f64) -> Id {
 
         let mut id = prev_id;
@@ -149,10 +149,10 @@ impl BassCalcApp {
     fn draw_params(&self, ui: &mut UiCell, w: f64) {
         let ref ids = self.ids.as_ref().unwrap();
 
-        let driver = self.params.driver_params();
-        let passive = self.params.passive_params();
-        let enclosure = self.params.enclosure_params();
-        let constants = self.params.constant_params();
+        let driver = &self.params.driver;
+        let passive = &self.params.passive;
+        let enclosure = &self.params.enclosure;
+        let constants = &self.params.constant;
         let len1 = driver.len() + 1;
         let len2 = len1 + passive.len() + 1;
         let len3 = len2 + enclosure.len() + 1;
@@ -172,16 +172,16 @@ impl BassCalcApp {
         let mut prev_id = ids.tab_driver_list_top;
 
         prev_id = self.draw_list_title("Driver", ui, 0, list_id, prev_id, w, h);
-        prev_id = self.draw_list_params(ui, 0, &driver, list_id, prev_id, w, h);
+        prev_id = self.draw_list_params(ui, 0, driver, list_id, prev_id, w, h);
 
         prev_id = self.draw_list_title("Passive", ui, 1, list_id, prev_id, w, h);
-        prev_id = self.draw_list_params(ui, 1, &passive, list_id, prev_id, w, h);
+        prev_id = self.draw_list_params(ui, 1, passive, list_id, prev_id, w, h);
 
         prev_id = self.draw_list_title("Enclosure", ui, 2, list_id, prev_id, w, h);
-        prev_id = self.draw_list_params(ui, 2, &enclosure, list_id, prev_id, w, h);
+        prev_id = self.draw_list_params(ui, 2, enclosure, list_id, prev_id, w, h);
 
         prev_id = self.draw_list_title("Constants", ui, 3, list_id, prev_id, w, h);
-        prev_id = self.draw_list_params(ui, 3, &constants, list_id, prev_id, w, h);
+        prev_id = self.draw_list_params(ui, 3, constants, list_id, prev_id, w, h);
     }
 
 }
@@ -190,7 +190,7 @@ fn text(text: &str, size: u32) -> Text {
     Text::new(text).color(color::WHITE).font_size(size)
 }
 
-fn init_param_ids(id_gen: &mut id::Generator, params: &[&Param]) -> Vec<[Id; 6]> {
+fn init_param_ids(id_gen: &mut id::Generator, params: &[Param]) -> Vec<[Id; 6]> {
     let mut ids: Vec<[Id; 6]> = vec![];
     for p in params.iter() {
         ids.push([id_gen.next(), id_gen.next(), id_gen.next(),
@@ -203,11 +203,6 @@ impl AppInterface for BassCalcApp {
     
     fn initialize(&mut self, ui: &mut Ui) {
         let mut id_gen = ui.widget_id_generator();
-
-        let driver = self.params.driver_params();
-        let passive = self.params.passive_params();
-        let enclosure = self.params.enclosure_params();
-        let constants = self.params.constant_params();
         
         self.title_ids = vec![[id_gen.next(), id_gen.next(), id_gen.next()],
                               [id_gen.next(), id_gen.next(), id_gen.next()],
@@ -215,10 +210,10 @@ impl AppInterface for BassCalcApp {
                               [id_gen.next(), id_gen.next(), id_gen.next()]];
 
 
-        self.param_ids.push(init_param_ids(&mut id_gen, &driver));
-        self.param_ids.push(init_param_ids(&mut id_gen, &passive));
-        self.param_ids.push(init_param_ids(&mut id_gen, &enclosure));
-        self.param_ids.push(init_param_ids(&mut id_gen, &constants));
+        self.param_ids.push(init_param_ids(&mut id_gen, &self.params.driver));
+        self.param_ids.push(init_param_ids(&mut id_gen, &self.params.passive));
+        self.param_ids.push(init_param_ids(&mut id_gen, &self.params.enclosure));
+        self.param_ids.push(init_param_ids(&mut id_gen, &self.params.constant));
 
         self.ids = Some(Ids::new(id_gen));
     }
