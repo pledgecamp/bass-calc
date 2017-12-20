@@ -6,11 +6,13 @@ use parameters::{Param, Parameters};
 
 use conrod::{color, widget, Colorable, Positionable, Sizeable, Widget};
 use conrod::color::rgb;
-use conrod::widget::{id, list, Canvas, Rectangle, List, Scrollbar, Tabs, Text};
+use conrod::widget::{id, Id, list, Canvas, RangeSlider, Rectangle, List, Scrollbar, Tabs, Text, TextEdit};
 use conrod::widget::list::{Down, Fixed};
 
 pub struct BassCalcApp {
     ids: Option<Ids>,
+    title_ids: Vec<[Id; 3]>,
+    param_ids: Vec<Vec<[Id; 6]>>,
     params: Parameters,
 }
 
@@ -24,6 +26,7 @@ widget_ids! {
         tab_driver,
         tab_driver_label,
         tab_driver_list,
+        tab_driver_list_top,
         tab_graph,
         tab_graph_label,
         graph_column,
@@ -43,42 +46,104 @@ impl BassCalcApp {
         BassCalcApp {
             ids: None,
             params: params,
+            title_ids: vec![],
+            param_ids: vec![],
         }
     }
 
-    fn draw_list_title(&self, title: &str, ui: &mut UiCell,
-                       item: &list::Item<Down, Fixed>, w: f64) {
+    fn draw_list_title(&self, title: &str, ui: &mut UiCell, ids_index: usize, list_id: Id,
+                        prev_id: Id, w: f64, h: f64) -> Id {
 
-        let (title_id, line_id) = {
-            let mut id_gen = ui.widget_id_generator();
-            (id_gen.next(), id_gen.next())
-        };
-        item.set(Canvas::new().color(color::DARK_CHARCOAL), ui);
+        let ids = self.title_ids[ids_index];
+        let canvas_id = ids[0];
+        let title_id = ids[1];
+        let line_id = ids[2];
 
-        Rectangle::fill([w, 1.0])
-            .mid_bottom_of(item.widget_id)
-            .color(rgb(0.3, 0.3, 0.3))
+        Canvas::new().align_middle_x_of(list_id).down_from(prev_id, 0.0).w_of(list_id).h(h)
+            .color(color::BLACK).set(canvas_id, ui);
+
+        let _ = text(title, 22)
+            .middle_of(canvas_id)
+            .set(title_id, ui);
+
+        Rectangle::fill([w - 2.0, 1.0])
+            .mid_bottom_of(canvas_id)
+            .color(rgb(0.5, 0.5, 0.5))
             .set(line_id, ui);
 
-        let _ = text(title, 22).middle_of(item.widget_id).set(title_id, ui);
+        canvas_id
     }
 
-    fn draw_list_param(&self, ui: &mut UiCell, item: &list::Item<Down, Fixed>,
-                       param: &Param, w: f64) {
+    fn draw_list_param(&self, ui: &mut UiCell, ids_index: usize, param_index: usize, param: &Param,
+                        list_id: Id, prev_id: Id, w: f64, h: f64) -> Id {
 
-        let (name_id, range_id, entry_id, unit_id, line_id)  = {
-            let mut id_gen = ui.widget_id_generator();
-            (id_gen.next(), id_gen.next(), id_gen.next(), id_gen.next(), id_gen.next())
-        };
-        item.set(Canvas::new().color(color::BLACK), ui);
+        let name_w = w * 0.17;
+        let range_w = w * 0.28;
+        let entry_w = w * 0.25;
+
+        let ids = &self.param_ids[ids_index][param_index];
+        let canvas_id = ids[0];
+        let line_id = ids[1];
+        let name_id = ids[2];
+        let range_id = ids[3];
+        let entry_id = ids[4];
+        let unit_id = ids[5];
+        
+        Canvas::new().align_middle_x_of(list_id).down_from(prev_id, 0.0).w_of(list_id).h(h)
+            .color(color::DARK_CHARCOAL).set(canvas_id, ui);
 
         Rectangle::fill([w, 1.0])
-            .mid_bottom_of(item.widget_id)
-            .color(rgb(0.1, 0.1, 0.1))
+            .mid_bottom_of(canvas_id)
+            .color(rgb(0.4, 0.4, 0.4))
             .set(line_id, ui);
 
-        text(&param.name, 17).mid_left_of(item.widget_id).set(name_id, ui);
-        text(&param.unit, 17).right_from(name_id, 10.0).set(unit_id, ui);
+        let name = format!("{}  ", param.name);
+        text(&name, 14).right_justify().mid_left_of(canvas_id).w(name_w).set(name_id, ui);
+
+        let mid = param.to_percent();
+        let start = if mid < 0.1 { 0.0 } else { mid - 0.1 };
+        let end = if mid > 0.9 { 1.0 } else { mid + 0.1 };
+        for (edge, value) in RangeSlider::new(start, end, 0.0, 1.0)
+            .color(color::LIGHT_BLUE)
+            .w_h(range_w, 20.0)
+            .align_middle_y_of(canvas_id)
+            .right_from(name_id, 0.0)
+            .set(range_id, ui)
+        {
+            match edge {
+                widget::range_slider::Edge::Start => param.set_percent(value),
+                widget::range_slider::Edge::End => param.set_percent(value),
+            }
+            param.set_percent(value);
+            println!("{} value: {}", param.name, value)
+        }
+
+        for edit in TextEdit::new(&format!("{}", param.v()))
+            .color(color::WHITE)
+            .w(entry_w)
+            .right_from(range_id, 4.0)
+            .center_justify()
+            .restrict_to_height(true)
+            .set(entry_id, ui)
+        {
+            
+        }
+
+        text(&param.unit, 12).right_from(entry_id, 4.0).set(unit_id, ui);
+        canvas_id
+    }
+
+    fn draw_list_params(&self, ui: &mut UiCell, ids_index: usize, params: &[&Param], list_id: Id,
+                        prev_id: Id, w: f64, h: f64) -> Id {
+
+        let mut id = prev_id;
+        let mut i = 0;
+        for param in params {
+            id = self.draw_list_param(ui, ids_index, i, param, list_id, id, w, h);
+            i += 1;
+        }
+
+        id
     }
 
     fn draw_params(&self, ui: &mut UiCell, w: f64) {
@@ -92,47 +157,70 @@ impl BassCalcApp {
         let len2 = len1 + passive.len() + 1;
         let len3 = len2 + enclosure.len() + 1;
         let len4 = len3 + constants.len() + 1;
-        
-        let (mut items, scrollbar) = List::flow_down(len4)
-                .item_size(38.0)
-                .scrollbar_on_top()
-                .middle_of(ids.tab_driver)
-                .wh_of(ids.tab_driver)
-                .set(ids.tab_driver_list, ui);
 
-        while let Some(item) = items.next(ui) {
-            let i = item.i;
-            if i == 0 {
-                self.draw_list_title("Driver", ui, &item, w);
-            } else if i < len1 {
-                self.draw_list_param(ui, &item, driver[i - 1], w);
-            } else if i == len1 {
-                self.draw_list_title("Passive", ui, &item, w);
-            } else if i < len2 {
-                self.draw_list_param(ui, &item, passive[i - (len1+1)], w);
-            } else if i == len2 {
-                self.draw_list_title("Enclosure", ui, &item, w);
-            } else if i < len3 {
-                self.draw_list_param(ui, &item, enclosure[i - (len2+1)], w);
-            } else if i == len3 {
-                self.draw_list_title("Constants", ui, &item, w);
-            } else if i < len4 {
-                self.draw_list_param(ui, &item, constants[i - (len3+1)], w);
-            } else {
-                println!("Invalid list index {}", i);
-            }
-        }
+        let h = 38.0;
+        
+        let list_id = ids.tab_driver_list;
+        Canvas::new().color(color::BLACK).scroll_kids_vertically()
+            .middle_of(ids.tab_driver)
+            .wh_of(ids.tab_driver)
+            .set(list_id, ui);
+
+        Scrollbar::y_axis(list_id).auto_hide(false).set(ids.tabs_scrollbar, ui);
+
+        Canvas::new().w_h(0.0, 0.0).mid_top_of(list_id).set(ids.tab_driver_list_top, ui);
+        let mut prev_id = ids.tab_driver_list_top;
+
+        prev_id = self.draw_list_title("Driver", ui, 0, list_id, prev_id, w, h);
+        prev_id = self.draw_list_params(ui, 0, &driver, list_id, prev_id, w, h);
+
+        prev_id = self.draw_list_title("Passive", ui, 1, list_id, prev_id, w, h);
+        prev_id = self.draw_list_params(ui, 1, &passive, list_id, prev_id, w, h);
+
+        prev_id = self.draw_list_title("Enclosure", ui, 2, list_id, prev_id, w, h);
+        prev_id = self.draw_list_params(ui, 2, &enclosure, list_id, prev_id, w, h);
+
+        prev_id = self.draw_list_title("Constants", ui, 3, list_id, prev_id, w, h);
+        prev_id = self.draw_list_params(ui, 3, &constants, list_id, prev_id, w, h);
     }
+
 }
 
 fn text(text: &str, size: u32) -> Text {
     Text::new(text).color(color::WHITE).font_size(size)
 }
 
+fn init_param_ids(id_gen: &mut id::Generator, params: &[&Param]) -> Vec<[Id; 6]> {
+    let mut ids: Vec<[Id; 6]> = vec![];
+    for p in params.iter() {
+        ids.push([id_gen.next(), id_gen.next(), id_gen.next(),
+                  id_gen.next(), id_gen.next(), id_gen.next()]);
+    }
+    ids
+}
+
 impl AppInterface for BassCalcApp {
     
     fn initialize(&mut self, ui: &mut Ui) {
-        self.ids = Some(Ids::new(ui.widget_id_generator()));
+        let mut id_gen = ui.widget_id_generator();
+
+        let driver = self.params.driver_params();
+        let passive = self.params.passive_params();
+        let enclosure = self.params.enclosure_params();
+        let constants = self.params.constant_params();
+        
+        self.title_ids = vec![[id_gen.next(), id_gen.next(), id_gen.next()],
+                              [id_gen.next(), id_gen.next(), id_gen.next()],
+                              [id_gen.next(), id_gen.next(), id_gen.next()],
+                              [id_gen.next(), id_gen.next(), id_gen.next()]];
+
+
+        self.param_ids.push(init_param_ids(&mut id_gen, &driver));
+        self.param_ids.push(init_param_ids(&mut id_gen, &passive));
+        self.param_ids.push(init_param_ids(&mut id_gen, &enclosure));
+        self.param_ids.push(init_param_ids(&mut id_gen, &constants));
+
+        self.ids = Some(Ids::new(id_gen));
     }
 
     fn draw(&mut self, ui: &mut UiCell, size: (u32, u32)) {
@@ -167,10 +255,8 @@ impl AppInterface for BassCalcApp {
             .label_color(color::WHITE)
             .middle_of(ids.param_column)
             .set(ids.param_tabs, ui);
-        // A scrollbar for the tabs.
-        Scrollbar::y_axis(ids.param_tabs).auto_hide(true).set(ids.tabs_scrollbar, ui);
 
-        text("Graph", 36).middle_of(ids.tab_graph).set(ids.tab_graph_label, ui);
+        //text("Graph", 36).middle_of(ids.tab_graph).set(ids.tab_graph_label, ui);
 
         let min_x = 0.0;
         let max_x = f64::consts::PI * 2.0;

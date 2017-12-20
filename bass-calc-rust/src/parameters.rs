@@ -27,8 +27,16 @@ impl ParamPrivate {
         }
     }
 
-    fn v(&self) -> f64 {
+    pub fn v(&self) -> f64 {
         self.value.get()
+    }
+
+    pub fn to_percent(&self) -> f64 {
+        (self.v() - self.min) / (self.max - self.min)
+    }
+
+    pub fn set_percent(&self, percent: f64) {
+        self.set(self.min + percent*(self.max - self.min))
     }
 
     fn set(&self, new_value: f64) {
@@ -284,21 +292,21 @@ pub fn default_parameters() -> Parameters {
         // Environmental parameters
         ρ0: param_simple("p0", "kg / m**3", 1.1839, 1.0, 1.4),
         c: param_simple("c", "m/s", 345.0, 340.0, 350.0),
-        t: param_simple("t", "s", 1.0, 1.0, 1.0),
+        t: param_simple("t", "s", 1.0, 0.9, 1.1),
 
         // Driver low level parameters
         Xmax: param_simple("Xmax", "mm", 3.0, 0.0, 100.0),
         Vd: param("Vd", "Liter", 0.1, 0.1, 100.0, vd_update),
         Sd: param_simple("Sd", "cm ** 2", 10.0, 1.0, 1000.0),
-        Bl: param_simple("Bl", "tesla meter", 1.0, 0.1, 20.0),
+        Bl: param_simple("Bl", "tesla m", 1.0, 0.1, 20.0),
         Re: param_simple("Re", "ohm", 4.0, 0.1, 1000.0),
         Mmd: param_simple("Mmd", "g", 10.0, 1.0, 1000.0),
         Mms: param("Mms", "g", 10.0, 1.0, 1000.0, mms_update),
         Mas: param("Mas", "g * cm**2", 10.0, 1.0, 1000.0, mas_update),
         Rms: param_simple("Rms", "N * s / m", 4.0, 0.0, 1000.0),
         Ras: param("Ras", "ohm", 1.0, 0.0, 1000.0, ras_update),
-        Cms: param_simple("Cms", "meter / N", 1.0, 0.1, 1000.0),
-        Cas: param("Cas", "meter**5 / N", 1.0, 0.0, 100.0, cas_update),
+        Cms: param_simple("Cms", "m / N", 1.0, 0.1, 1000.0),
+        Cas: param("Cas", "m**5 / N", 1.0, 0.0, 100.0, cas_update),
         Vas: param("Vas", "liter", 1.0, 0.0, 100.0, vas_update),
 
         Rg: param_simple("Rg", "", 0.0, 0.0, 1000.0),
@@ -311,13 +319,13 @@ pub fn default_parameters() -> Parameters {
         Qms: param("Qms", "", 0.5, 0.0, 30.0, qms_update),
         Qts: param("Qts", "", 0.5, 0.0, 30.0, qts_update),
         Qs: param("Qs", "", 0.5, 0.0, 30.0, qs_update),
-        Cab: param_simple("Cab", "meter**5 / N", 1.0, 0.0, 100.0),
+        Cab: param_simple("Cab", "m**5 / N", 1.0, 0.0, 100.0),
         Vb: param("Vb", "liter", 0.1, 0.0, 100.0, vb_update),
 
         // Passive radiator low level parameters
         Vap: param("Vap", "liter", 1.0, 0.0, 100.0, vap_update),
-        Cmp: param_simple("Cmp", "meter / N", 1.0, 0.0, 1000.0),
-        Cap: param("Cap", "meter**5 / N", 1.0, 0.0, 100.0, cap_update),
+        Cmp: param_simple("Cmp", "m / N", 1.0, 0.0, 1000.0),
+        Cap: param("Cap", "m**5 / N", 1.0, 0.0, 100.0, cap_update),
         Rmp: param_simple("Rmp", "N * s / m", 4.0, 0.0, 1000.0),
         Rap: param("Rap", "ohm", 1.0, 0.0, 1000.0, rap_update),
         Mmp: param_simple("Mmp", "kg",  1.0, 0.001, 100.0),
