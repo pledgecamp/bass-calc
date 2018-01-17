@@ -152,49 +152,60 @@ fn set_children(param_ref: &mut Param, children: Vec<Param>) {
     }
 }
 
+// 10000 * cm^2 * mm = L
 fn vd_update(P: &Parameters) -> f64 {
-    P.Sd.v() * P.Xmax.v()
+    10000.0 * P.Sd.v() * P.Xmax.v()
 }
 
+// g + 1000 * ((kg / m^3) / sqrt(cm^2)) * cm^4 = g
 fn mms_update(P: &Parameters) -> f64 {
     let Sd = P.Sd.v();
-    P.Mmd.v() + (2.0 * ((8.0 * P.ρ0.v()) / (3.0 * PI2 * ( Sd / PI ).sqrt()))) * Sd.powi(2)
+    P.Mmd.v() + 1000.0 * (2.0 * ((8.0 * P.ρ0.v()) / (3.0 * PI2 * ( Sd / PI ).sqrt()))) * Sd.powi(2)
 }
 
+// g / cm^4 = g / cm^4
 fn mas_update(P: &Parameters) -> f64 {
     P.Mms.v() / P.Sd.v().powi(2)
 }
 
+// (N * s / m) / (100000000 * cm^4) = (Pa * s) / m^3
 fn ras_update(P: &Parameters) -> f64 {
-    P.Rms.v() / P.Sd.v().powi(2)
+    P.Rms.v() / (100000000.0 * P.Sd.v().powi(2))
 }
 
+// 100000000 * (1 m / N) * cm^4 = m^5 / N
 fn cas_update(P: &Parameters) -> f64 {
-    P.Cms.v() * P.Sd.v().powi(2)
+    100000000.0 * P.Cms.v() * P.Sd.v().powi(2)
 }
 
+// (kg / m^3) * (m/s)^2 * (m^5 / N) / 1000 = L
 fn vas_update(P: &Parameters) -> f64 {
-    P.ρ0.v() * P.c.v().powi(2) * P.Cas.v()
+    P.ρ0.v() * P.c.v().powi(2) * P.Cas.v() / 1000.0
 }
 
+// 1 / Hz = s
 fn ts_update(P: &Parameters) -> f64 {
     1.0 / P.ωs.v()
 }
 
+// Hz = Hz
 fn ωs_update(P: &Parameters) -> f64 {
     P.Fs.v() * PI2
 }
 
+// 1 / sqrt((g/cm^4) * (m^5 / N) / 100000) = Hz
 fn fs_update(P: &Parameters) -> f64 {
-    1.0 / ( PI2 * (P.Mas.v() * P.Cas.v()).sqrt())
+    1.0 / ( PI2 * (P.Mas.v() * P.Cas.v() / 100000.0).sqrt())
 }
 
+// 1000 * (Hz * Ohm * (g/cm^4) * cm^4) / (tesla * m)^2 = 1
 fn qes_update(P: &Parameters) -> f64 {
-    (P.ωs.v() * P.Re.v() * P.Mas.v() * P.Sd.v().powi(2)) / P.Bl.v().powi(2)
+    1000.0 * (P.ωs.v() * P.Re.v() * P.Mas.v() * P.Sd.v().powi(2)) / P.Bl.v().powi(2)
 }
 
+// 1 / (Hz * (m^5 / N) * (Pa * s) / m^3) = 1
 fn qms_update(P: &Parameters) -> f64 {
-    1.0 / (P.Bl.v() * P.Cas.v() * P.Ras.v())
+    1.0 / (P.ωs.v() * P.Cas.v() * P.Ras.v())
 }
 
 fn qts_update(P: &Parameters) -> f64 {
@@ -205,34 +216,42 @@ fn qs_update(P: &Parameters) -> f64 {
     P.Qts.v()
 }
 
+// (kg/m^3) * (m/s)^2 * (m^5 / N) / 1000 = L
 fn vb_update(P: &Parameters) -> f64 {
-    P.ρ0.v() * P.c.v().powi(2) * P.Cab.v()
+    P.ρ0.v() * P.c.v().powi(2) * P.Cab.v() / 1000.0
 }
 
+// (kg/m^3) * (m/s)^2 * (m^5 / N) / 1000 = L
 fn vap_update(P: &Parameters) -> f64 {
     P.ρ0.v() * P.c.v().powi(2) * P.Cap.v()
 }
 
+// 100000000 * (m/N) * cm^4 = m^5 / N
 fn cap_update(P: &Parameters) -> f64 {
-    P.Cmp.v() * P.Sp.v().powi(2)
+    100000000.0 * P.Cmp.v() * P.Sp.v().powi(2)
 }
 
+// ((N * s / m) / cm^4) / 100000000 = (Pa * s) / m^3
 fn rap_update(P: &Parameters) -> f64 {
-    P.Rmp.v() / P.Sp.v().powi(2)
+    (P.Rmp.v() / P.Sp.v().powi(2)) * 100000000.0
 }
 
+// kg / cm^4 = kg / cm^4
 fn map_update(P: &Parameters) -> f64 {
     P.Mmp.v() / P.Sp.v().powi(2)
 }
 
+// 1 / (Hz * (m^5 / N) * (Pa * s)/m^3) = 1
 fn qmp_update(P: &Parameters) -> f64 {
     1.0 / (P.ωp.v() * P.Cap.v() * P.Rap.v())
 }
 
+// 10000 / sqrt((kg/cm^4) * (m^5/N)) = Hz
 fn fp_update(P: &Parameters) -> f64 {
-    1.0 / ( PI2 * (P.Map.v() * P.Cap.v()).sqrt())
+    10000.0 / ( PI2 * (P.Map.v() * P.Cap.v()).sqrt())
 }
 
+// 1 / Hz = s
 fn tp_update(P: &Parameters) -> f64 {
     1.0 / P.ωp.v()
 }
@@ -241,10 +260,12 @@ fn ωp_update(P: &Parameters) -> f64 {
     P.Fp.v() * PI2
 }
 
+// 10000 * sqrt(1 / (m^5/N * kg/cm^4)) = Hz
 fn fb_update(P: &Parameters) -> f64 {
-    ((1.0 + (P.Cab.v() / P.Cap.v())) / (PI2 * P.Cab.v() * P.Map.v())).sqrt()
+    10000.0 * ((1.0 + (P.Cab.v() / P.Cap.v())) / (PI2 * P.Cab.v() * P.Map.v())).sqrt()
 }
 
+// 1 / Hz = s
 fn tb_update(P: &Parameters) -> f64 {
     1.0 / P.ωp.v()
 }
@@ -269,6 +290,7 @@ fn h_update(P: &Parameters) -> f64 {
     P.Fb.v() / P.Fp.v()
 }
 
+// (1000 / (m/s)^3) * (Hz^3 * L) = 1
 fn η0_update(P: &Parameters) -> f64 {
     ((4.0 * PI.powi(2)) / P.c.v().powi(3)) * (P.Fs.v().powi(3) * P.Vas.v() / P.Qes.v())
 }
@@ -276,23 +298,23 @@ fn η0_update(P: &Parameters) -> f64 {
 pub fn default_parameters() -> Parameters {
 
         // Environmental parameters
-    let ρ0 = param_simple("p0", "kg / m**3", 1.1839, 1.0, 1.4);
+    let ρ0 = param_simple("p0", "kg / m^3", 1.1839, 1.0, 1.4);
     let c = param_simple("c", "m/s", 345.0, 340.0, 350.0);
     let t = param_simple("t", "s", 1.0, 0.9, 1.1);
 
     // Driver low level parameters
     let Xmax = param_simple("Xmax", "mm", 3.0, 0.0, 100.0);
     let Vd = param("Vd", "Liter", 0.1, 0.1, 100.0, vd_update);
-    let Sd = param_simple("Sd", "cm ** 2", 10.0, 1.0, 1000.0);
+    let Sd = param_simple("Sd", "cm ^ 2", 10.0, 1.0, 1000.0);
     let Bl = param_simple("Bl", "tesla m", 1.0, 0.1, 20.0);
     let Re = param_simple("Re", "ohm", 4.0, 0.1, 1000.0);
     let Mmd = param_simple("Mmd", "g", 10.0, 1.0, 1000.0);
     let Mms = param("Mms", "g", 10.0, 1.0, 1000.0, mms_update);
-    let Mas = param("Mas", "g * cm**2", 10.0, 1.0, 1000.0, mas_update);
+    let Mas = param("Mas", "g / cm^4", 10.0, 1.0, 1000.0, mas_update);
     let Rms = param_simple("Rms", "N * s / m", 4.0, 0.0, 1000.0);
-    let Ras = param("Ras", "ohm", 1.0, 0.0, 1000.0, ras_update);
+    let Ras = param("Ras", "(Pa * s) / m^3", 1.0, 0.0, 1000.0, ras_update);
     let Cms = param_simple("Cms", "m / N", 1.0, 0.1, 1000.0);
-    let Cas = param("Cas", "m**5 / N", 1.0, 0.0, 100.0, cas_update);
+    let Cas = param("Cas", "m^5 / N", 1.0, 0.0, 100.0, cas_update);
     let Vas = param("Vas", "liter", 1.0, 0.0, 100.0, vas_update);
 
     let Rg = param_simple("Rg", "", 0.0, 0.0, 1000.0);
@@ -305,18 +327,18 @@ pub fn default_parameters() -> Parameters {
     let Qms = param("Qms", "", 0.5, 0.0, 30.0, qms_update);
     let Qts = param("Qts", "", 0.5, 0.0, 30.0, qts_update);
     let Qs = param("Qs", "", 0.5, 0.0, 30.0, qs_update);
-    let Cab = param_simple("Cab", "m**5 / N", 1.0, 0.0, 100.0);
+    let Cab = param_simple("Cab", "m^5 / N", 1.0, 0.0, 100.0);
     let Vb = param("Vb", "liter", 0.1, 0.0, 100.0, vb_update);
 
     // Passive radiator low level parameters
     let Vap = param("Vap", "liter", 1.0, 0.0, 100.0, vap_update);
     let Cmp = param_simple("Cmp", "m / N", 1.0, 0.0, 1000.0);
-    let Cap = param("Cap", "m**5 / N", 1.0, 0.0, 100.0, cap_update);
+    let Cap = param("Cap", "m^5 / N", 1.0, 0.0, 100.0, cap_update);
     let Rmp = param_simple("Rmp", "N * s / m", 4.0, 0.0, 1000.0);
     let Rap = param("Rap", "ohm", 1.0, 0.0, 1000.0, rap_update);
     let Mmp = param_simple("Mmp", "kg",  1.0, 0.001, 100.0);
-    let Map = param("Map", "kg / cm**2", 1.0, 0.0, 1000.0, map_update);
-    let Sp = param_simple("Sp", "cm**2", 10.0, 0.0, 1000.0);
+    let Map = param("Map", "kg / cm^2", 1.0, 0.0, 1000.0, map_update);
+    let Sp = param_simple("Sp", "cm^2", 10.0, 0.0, 1000.0);
 
     // Passive radiator mid level parameters
     let Qmp = param("Qmp", "", 0.5, 0.0, 30.0, qmp_update);
