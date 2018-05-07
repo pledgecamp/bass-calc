@@ -16,6 +16,7 @@ pub struct ParamPrivate {
     pub min: f64,
     pub max: f64,
     pub update_fn: Option<fn(&Parameters) -> f64>,
+    pub precision: usize,
     children: RefCell<Vec<Param>>,
     parents: RefCell<Vec<Param>>,
 }
@@ -119,23 +120,27 @@ impl Parameters {
     
 }
 
-fn param_simple(name: &str, unit: &str, value: f64, min: f64, max: f64) -> Param {
-    make_param(name, unit, value, min, max, None)
+fn param_simple(name: &str, unit: &str, value: f64, min: f64, max: f64, precision: usize) -> Param {
+
+    make_param(name, unit, value, min, max, precision, None)
 }
 
-fn param(name: &str, unit: &str, value: f64, min: f64, max: f64, update: fn(&Parameters) -> f64) -> Param {
-    make_param(name, unit, value, min, max, Some(update))
+fn param(name: &str, unit: &str, value: f64, min: f64, max: f64, precision: usize,
+        update: fn(&Parameters) -> f64) -> Param {
+
+    make_param(name, unit, value, min, max, precision, Some(update))
 }
 
-fn make_param(name: &str, unit: &str, value: f64, min: f64, max: f64,
+fn make_param(name: &str, unit: &str, value: f64, min: f64, max: f64, precision: usize,
          update: Option<fn(&Parameters) -> f64>) -> Param {
 
     Rc::new(ParamPrivate {
         name: name.to_string(),
         unit: unit.to_string(),
         value: Cell::new(value),
-        min: min,
-        max: max,
+        min,
+        max,
+        precision,
         update_fn: update,
         children: RefCell::new(vec![]),
         parents: RefCell::new(vec![]),
@@ -298,64 +303,64 @@ fn η0_update(P: &Parameters) -> f64 {
 pub fn default_parameters() -> Parameters {
 
         // Environmental parameters
-    let ρ0 = param_simple("p0", "kg / m^3", 1.1839, 1.0, 1.4);
-    let c = param_simple("c", "m/s", 345.0, 340.0, 350.0);
-    let t = param_simple("t", "s", 1.0, 0.9, 1.1);
+    let ρ0 = param_simple("p0", "kg / m^3", 1.1839, 1.0, 1.4, 4);
+    let c = param_simple("c", "m/s", 345.0, 340.0, 350.0, 1);
+    let t = param_simple("t", "s", 1.0, 0.9, 1.1, 1);
 
     // Driver low level parameters
-    let Xmax = param_simple("Xmax", "mm", 3.0, 0.0, 100.0);
-    let Vd = param("Vd", "Liter", 0.1, 0.1, 100.0, vd_update);
-    let Sd = param_simple("Sd", "cm ^ 2", 10.0, 1.0, 1000.0);
-    let Bl = param_simple("Bl", "tesla m", 1.0, 0.1, 20.0);
-    let Re = param_simple("Re", "ohm", 4.0, 0.1, 1000.0);
-    let Mmd = param_simple("Mmd", "g", 10.0, 1.0, 1000.0);
-    let Mms = param("Mms", "g", 10.0, 1.0, 1000.0, mms_update);
-    let Mas = param("Mas", "g / cm^4", 10.0, 1.0, 1000.0, mas_update);
-    let Rms = param_simple("Rms", "N * s / m", 4.0, 0.0, 1000.0);
-    let Ras = param("Ras", "(Pa * s) / m^3", 1.0, 0.0, 1000.0, ras_update);
-    let Cms = param_simple("Cms", "m / N", 1.0, 0.1, 1000.0);
-    let Cas = param("Cas", "m^5 / N", 1.0, 0.0, 100.0, cas_update);
-    let Vas = param("Vas", "liter", 1.0, 0.0, 100.0, vas_update);
+    let Xmax = param_simple("Xmax", "mm", 3.0, 0.0, 100.0, 1);
+    let Vd = param("Vd", "Liter", 0.1, 0.1, 100.0, 1, vd_update);
+    let Sd = param_simple("Sd", "cm ^ 2", 10.0, 1.0, 1000.0, 1);
+    let Bl = param_simple("Bl", "tesla m", 1.0, 0.1, 20.0, 1);
+    let Re = param_simple("Re", "ohm", 4.0, 0.1, 1000.0, 1);
+    let Mmd = param_simple("Mmd", "g", 10.0, 1.0, 1000.0, 1);
+    let Mms = param("Mms", "g", 10.0, 1.0, 1000.0, 1, mms_update);
+    let Mas = param("Mas", "g / cm^4", 10.0, 1.0, 1000.0, 1, mas_update);
+    let Rms = param_simple("Rms", "N * s / m", 4.0, 0.0, 1000.0, 1);
+    let Ras = param("Ras", "(Pa * s) / m^3", 1.0, 0.0, 1000.0, 1, ras_update);
+    let Cms = param_simple("Cms", "m / N", 1.0, 0.1, 1000.0, 1);
+    let Cas = param("Cas", "m^5 / N", 1.0, 0.0, 100.0, 1, cas_update);
+    let Vas = param("Vas", "liter", 1.0, 0.0, 100.0, 1, vas_update);
 
-    let Rg = param_simple("Rg", "", 0.0, 0.0, 1000.0);
+    let Rg = param_simple("Rg", "", 0.0, 0.0, 1000.0, 1);
 
     // Driver mid level parameters
-    let Ts = param("Ts", "s", 0.02, 0.0002, 0.2, ts_update);
-    let ωs = param("ωs", "Hz", 50.0, 5.0, 5000.0, ωs_update);
-    let Fs = param("Fs", "Hz", 314.159, 31.4159, 31415.93, fs_update);
-    let Qes = param("Qes", "", 0.5, 0.0, 30.0, qes_update);
-    let Qms = param("Qms", "", 0.5, 0.0, 30.0, qms_update);
-    let Qts = param("Qts", "", 0.5, 0.0, 30.0, qts_update);
-    let Qs = param("Qs", "", 0.5, 0.0, 30.0, qs_update);
-    let Cab = param_simple("Cab", "m^5 / N", 1.0, 0.0, 100.0);
-    let Vb = param("Vb", "liter", 0.1, 0.0, 100.0, vb_update);
+    let Ts = param("Ts", "s", 0.02, 0.0002, 0.2, 4, ts_update);
+    let ωs = param("ωs", "Hz", 50.0, 5.0, 5000.0, 1, ωs_update);
+    let Fs = param("Fs", "Hz", 314.1, 31.4, 31415.9, 1, fs_update);
+    let Qes = param("Qes", "", 0.5, 0.0, 30.0, 1, qes_update);
+    let Qms = param("Qms", "", 0.5, 0.0, 30.0, 1, qms_update);
+    let Qts = param("Qts", "", 0.5, 0.0, 30.0, 1, qts_update);
+    let Qs = param("Qs", "", 0.5, 0.0, 30.0, 1, qs_update);
+    let Cab = param_simple("Cab", "m^5 / N", 1.0, 0.0, 100.0, 1);
+    let Vb = param("Vb", "liter", 0.1, 0.0, 100.0, 1, vb_update);
 
     // Passive radiator low level parameters
-    let Vap = param("Vap", "liter", 1.0, 0.0, 100.0, vap_update);
-    let Cmp = param_simple("Cmp", "m / N", 1.0, 0.0, 1000.0);
-    let Cap = param("Cap", "m^5 / N", 1.0, 0.0, 100.0, cap_update);
-    let Rmp = param_simple("Rmp", "N * s / m", 4.0, 0.0, 1000.0);
-    let Rap = param("Rap", "ohm", 1.0, 0.0, 1000.0, rap_update);
-    let Mmp = param_simple("Mmp", "kg",  1.0, 0.001, 100.0);
-    let Map = param("Map", "kg / cm^2", 1.0, 0.0, 1000.0, map_update);
-    let Sp = param_simple("Sp", "cm^2", 10.0, 0.0, 1000.0);
+    let Vap = param("Vap", "liter", 1.0, 0.0, 100.0, 1, vap_update);
+    let Cmp = param_simple("Cmp", "m / N", 1.0, 0.0, 1000.0, 1);
+    let Cap = param("Cap", "m^5 / N", 1.0, 0.0, 100.0, 1, cap_update);
+    let Rmp = param_simple("Rmp", "N * s / m", 4.0, 0.0, 1000.0, 1);
+    let Rap = param("Rap", "ohm", 1.0, 0.0, 1000.0, 1, rap_update);
+    let Mmp = param_simple("Mmp", "kg",  1.0, 0.001, 100.0, 3);
+    let Map = param("Map", "kg / cm^2", 1.0, 0.0, 1000.0, 1, map_update);
+    let Sp = param_simple("Sp", "cm^2", 10.0, 0.0, 1000.0, 1);
 
     // Passive radiator mid level parameters
-    let Qmp = param("Qmp", "", 0.5, 0.0, 30.0, qmp_update);
-    let ωp = param("ωp", "Hz", 20.0, 0.0, 1000.0, ωp_update);
-    let Fp = param("Fp", "Hz", 120.0, 0.0, 6282.0, fp_update);
-    let Tp = param("Tp", "s", 0.05, 0.0, 0.1, tp_update);
+    let Qmp = param("Qmp", "", 0.5, 0.0, 30.0, 1, qmp_update);
+    let ωp = param("ωp", "Hz", 20.0, 0.0, 1000.0, 1, ωp_update);
+    let Fp = param("Fp", "Hz", 120.0, 0.0, 6282.0, 1, fp_update);
+    let Tp = param("Tp", "s", 0.05, 0.0, 0.1, 1, tp_update);
 
     // Enclosure parameters
-    let ωb = param("ωb", "Hz", 20.0, 0.0, 1000.0, ωb_update);
-    let Fb = param("Fb", "Hz", 120.0, 0.0, 6282.0, fb_update);
-    let Tb = param("Tb", "s", 0.05, 0.0, 0.1, tb_update);
+    let ωb = param("ωb", "Hz", 20.0, 0.0, 1000.0, 1, ωb_update);
+    let Fb = param("Fb", "Hz", 120.0, 0.0, 6282.0, 1, fb_update);
+    let Tb = param("Tb", "s", 0.05, 0.0, 0.1, 1, tb_update);
 
-    let α = param("α", "", 3.0, 0.0, 100.0, α_update);
-    let δ = param("δ", "", 7.0, 0.0, 100.0, δ_update);
-    let y = param("y", "", 0.5, 0.0, 100.0, y_update);
-    let h = param("h", "", 0.5, 0.0, 100.0, h_update);
-    let η0 = param("η0", "", 0.4, 0.0, 100.0, η0_update);
+    let α = param("α", "", 3.0, 0.0, 100.0, 1, α_update);
+    let δ = param("δ", "", 7.0, 0.0, 100.0, 1, δ_update);
+    let y = param("y", "", 0.5, 0.0, 100.0, 1, y_update);
+    let h = param("h", "", 0.5, 0.0, 100.0, 1, h_update);
+    let η0 = param("η0", "", 0.4, 0.0, 100.0, 1, η0_update);
 
     let mut P = Parameters {
 
