@@ -5,17 +5,18 @@
 #[macro_use] extern crate conrod_derive;
 
 extern crate find_folder;
+extern crate csv;
+
 extern crate dimensioned as dim;
 
 mod parameters;
-use parameters::*;
 
 #[cfg(all(feature="winit", feature="glium"))] mod graphics;
 use graphics::*;
 
 #[cfg(all(feature="winit", feature="glium"))]
 fn main() {
-    let P = default_parameters();
+    let P = parameters::file_defaults();
     
     let mut app = app::make_app(P);
     app.run();

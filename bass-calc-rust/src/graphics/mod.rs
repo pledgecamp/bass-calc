@@ -51,8 +51,8 @@ impl<T> App<T> where T: AppInterface {
         let mut ui = conrod::UiBuilder::new([WIDTH as f64, HEIGHT as f64]).build();
 
         // Add a `Font` to the `Ui`'s `font::Map` from file.
-        let assets = find_folder::Search::KidsThenParents(3, 5).for_folder("assets").unwrap();
-        let font_path = assets.join("fonts/NotoSans-Regular.ttf");
+        let resources = find_folder::Search::KidsThenParents(3, 5).for_folder("resources").unwrap();
+        let font_path = resources.join("fonts/NotoSans-Regular.ttf");
         ui.fonts.insert_from_file(font_path).unwrap();
 
         // A type used for converting `conrod::render::Primitives` into `Command`s that can be used

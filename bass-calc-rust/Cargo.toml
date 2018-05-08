@@ -6,6 +6,7 @@ authors = ["Sam Pullman <sampullman@gmail.com>"]
 [dependencies]
 dimensioned = "0.6.0"
 find_folder = "0.3.0"
+csv = "1.0.0-beta.5"
 conrod_derive = "0.1"
 glium = { version = "0.21", optional = true }
 winit = { version = "0.12", optional = true }
