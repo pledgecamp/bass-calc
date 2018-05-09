@@ -1,32 +1,66 @@
 
 use parameters::params::*;
 use find_folder;
+use std::rc::Rc;
+use std::path::PathBuf;
+use std::collections::HashMap;
+use csv::StringRecord;
 
-pub fn file_defaults() -> Parameters {
+const FILE_RECORD_LEN: usize = 5;
+
+fn update_parameter(params: &Parameters, record: StringRecord) {
+    if record.len() != FILE_RECORD_LEN {
+        println!("Invalid file record len on line {}", record.position().unwrap().line());
+    } else {
+        let name = record.get(0).unwrap().to_string();
+        if let Some(param) = params.get(&name) {
+            
+                let val_str = record.get(1).unwrap().to_string();
+                if let Ok(val) = val_str.trim().parse::<f64>() {
+                    param.set(val);
+                } else {
+                    println!("Could not parse default value {} for {}", val_str, name);
+                }
+                
+
+        } else {
+            println!("Unknown parameter {}", &name);
+        }
+    }
+}
+
+pub fn load_file(params: Parameters, path: &PathBuf) -> Parameters {
     use csv::{ReaderBuilder, ErrorKind};
 
-    let P = builtin_defaults();
+    if let Ok(mut reader) = ReaderBuilder::new().comment(Some(b'#'))
+                                    .from_path(path) {
+
+        for result in reader.records() {
+            match result {
+                Ok(record) => update_parameter(&params, record),
+                Err(err) => {
+                    match err.kind() {
+                        ErrorKind::UnequalLengths {pos: Some(p), .. } => {
+                            println!("Error! Missing data on line {}", p.line())
+                        },
+                        _ => println!("Unknown error parsing parameter file")
+                    };
+                }
+            }
+        }
+    }
+    params
+}
+
+pub fn file_defaults() -> Parameters {
+
+    let mut P = builtin_defaults();
     
     if let Ok(resources) = find_folder::Search::KidsThenParents(3, 5).for_folder("resources") {
 
         let defaults_path = resources.join("presets/defaults.bass");
 
-
-        if let Ok(mut reader) = ReaderBuilder::new().comment(Some(b'#'))
-                                    .from_path(defaults_path) {
-
-            for result in reader.records() {
-                match result {
-                    Ok(record) => println!("{:?}", record),
-                    Err(err) => {
-                        match err.kind() {
-                            ErrorKind::UnequalLengths {pos: Some(p), .. } => println!("Error! Missing data on line {}", p.line()),
-                            _ => println!("Unknown error parsing parameter file")
-                        };
-                    }
-                }
-            }
-        }
+        P = load_file(P, &defaults_path);
     }
 
     P
@@ -35,7 +69,7 @@ pub fn file_defaults() -> Parameters {
 pub fn builtin_defaults() -> Parameters {
 
         // Environmental parameters
-    let ρ0 = param_simple("p0", "kg / m^3", 1.1839, 1.0, 1.4, 4);
+    let ρ0 = param_simple("ρ0", "kg / m^3", 1.1839, 1.0, 1.4, 4);
     let c = param_simple("c", "m/s", 345.0, 340.0, 350.0, 1);
     let t = param_simple("t", "s", 1.0, 0.9, 1.1, 1);
 
@@ -94,7 +128,22 @@ pub fn builtin_defaults() -> Parameters {
     let h = param("h", "", 0.5, 0.0, 100.0, 1, h_update);
     let η0 = param("η0", "", 0.4, 0.0, 100.0, 1, η0_update);
 
+    let p_arr = vec![Xmax.clone(), Vd.clone(), Sd.clone(), Bl.clone(), Re.clone(), Mmd.clone(), Mms.clone(),
+                 Mas.clone(), Rms.clone(), Ras.clone(), Cms.clone(), Cas.clone(), Vas.clone(), Rg.clone(),
+                 Ts.clone(), ωs.clone(), Fs.clone(), Qes.clone(), Qms.clone(), Qts.clone(), Qs.clone(),
+                 Cab.clone(), Vb.clone(),
+                 Vap.clone(), Cmp.clone(), Cap.clone(), Rmp.clone(), Rap.clone(), Mmp.clone(),
+                 Map.clone(), Sp.clone(), Qmp.clone(), ωp.clone(), Fp.clone(), Tp.clone(),
+                 ωb.clone(), Fb.clone(), Tb.clone(),
+                 α.clone(), δ.clone(), y.clone(), h.clone(), η0.clone(),
+                 ρ0.clone(), c.clone(), t.clone()];
+
+    let p_tuples = p_arr.into_iter().map(|p| (p.name.clone(), p)).collect::<Vec<(String, Param)>>();
+
+    let p_map: HashMap<String, Param> = p_tuples.iter().cloned().collect();
+
     let mut P = Parameters {
+        param_map: p_map,
 
         driver: [Xmax.clone(), Vd.clone(), Sd.clone(), Bl.clone(), Re.clone(), Mmd.clone(), Mms.clone(),
                  Mas.clone(), Rms.clone(), Ras.clone(), Cms.clone(), Cas.clone(), Vas.clone(), Rg.clone(),
@@ -107,24 +156,24 @@ pub fn builtin_defaults() -> Parameters {
         constant: [ρ0.clone(), c.clone(), t.clone()],
 
         // Environmental parameters
-        ρ0: ρ0, c: c, t: t,
+        ρ0, c, t,
 
         // Driver low level parameters
-        Xmax: Xmax, Vd: Vd, Sd: Sd, Bl: Bl, Re: Re, Mmd: Mmd, Mms: Mms,
-        Mas: Mas, Rms: Rms, Ras: Ras, Cms: Cms, Cas: Cas, Vas: Vas, Rg: Rg,
+        Xmax, Vd, Sd, Bl, Re, Mmd, Mms,
+        Mas, Rms, Ras, Cms, Cas, Vas, Rg,
 
         // Driver mid level parameters
-        Ts: Ts, ωs: ωs, Fs: Fs, Qes: Qes, Qms: Qms, Qts: Qts, Qs: Qs,
-        Cab: Cab, Vb: Vb,
+        Ts, ωs, Fs, Qes, Qms, Qts, Qs,
+        Cab, Vb,
 
         // Passive radiator low level parameters
-        Vap: Vap, Cmp: Cmp, Cap: Cap, Rmp: Rmp, Rap: Rap, Mmp: Mmp, Map: Map, Sp: Sp,
+        Vap, Cmp, Cap, Rmp, Rap, Mmp, Map, Sp,
 
         // Passive radiator mid level parameters
-        Qmp: Qmp, ωp: ωp, Fp: Fp, Tp: Tp,
+        Qmp, ωp, Fp, Tp,
 
         // Enclosure parameters
-        ωb: ωb, Fb: Fb, Tb: Tb, α: α, δ: δ, y: y, h: h, η0: η0,
+        ωb, Fb, Tb, α, δ, y, h, η0,
     };
     
     set_children(&mut P.Vd, vec![P.Sd.clone(), P.Xmax.clone()]);

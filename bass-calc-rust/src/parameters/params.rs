@@ -3,6 +3,7 @@ use std::cell::Cell;
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::f64::consts::PI;
+use std::collections::HashMap;
 
 const PI2: f64 = 2.0 * PI;
 
@@ -38,7 +39,7 @@ impl ParamPrivate {
         self.set(self.min + percent*(self.max - self.min))
     }
 
-    fn set(&self, new_value: f64) {
+    pub fn set(&self, new_value: f64) {
         self.value.set(new_value)
     }
 }
@@ -47,6 +48,7 @@ pub type Param = Rc<ParamPrivate>;
 
 #[allow(non_snake_case)]
 pub struct Parameters {
+    pub param_map: HashMap<String, Param>,
 
     pub driver: [Param; 23],
     pub passive: [Param; 12],
@@ -116,6 +118,15 @@ pub struct Parameters {
 
 impl Parameters {
     
+    pub fn get(&self, name: &str) -> Option<Param> {
+
+        if let Some(param) = self.param_map.get(name) {
+            Some(param.clone())
+        } else {
+            None
+        }
+    }
+
 }
 
 pub fn param_simple(name: &str, unit: &str, value: f64, min: f64, max: f64, precision: usize) -> Param {
