@@ -118,7 +118,7 @@ impl BassCalcApp {
             println!("{} value: {}", param.name, value)
         }
 
-        for edit in TextEdit::new(&format!("{:.*}", param.precision, param.v()))
+        for edit in TextEdit::new(&format!("{:.*}", param.precision(), param.v()))
             .color(color::WHITE)
             .w(entry_w)
             .right_from(range_id, 4.0)

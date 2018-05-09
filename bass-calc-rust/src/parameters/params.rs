@@ -15,7 +15,7 @@ pub struct ParamPrivate {
     pub min: f64,
     pub max: f64,
     pub update_fn: Option<fn(&Parameters) -> f64>,
-    pub precision: usize,
+    precision: Cell<usize>,
     children: RefCell<Vec<Param>>,
     parents: RefCell<Vec<Param>>,
 }
@@ -41,6 +41,14 @@ impl ParamPrivate {
 
     pub fn set(&self, new_value: f64) {
         self.value.set(new_value)
+    }
+
+    pub fn precision(&self) -> usize {
+        self.precision.get()
+    }
+
+    pub fn set_precision(&self, precision: usize) {
+        self.precision.set(precision)
     }
 }
 
@@ -149,7 +157,7 @@ pub fn make_param(name: &str, unit: &str, value: f64, min: f64, max: f64, precis
         value: Cell::new(value),
         min,
         max,
-        precision,
+        precision: Cell::new(precision),
         update_fn: update,
         children: RefCell::new(vec![]),
         parents: RefCell::new(vec![]),

@@ -1,12 +1,11 @@
 
 use parameters::params::*;
 use find_folder;
-use std::rc::Rc;
 use std::path::PathBuf;
 use std::collections::HashMap;
 use csv::StringRecord;
 
-const FILE_RECORD_LEN: usize = 5;
+const FILE_RECORD_LEN: usize = 6;
 
 fn update_parameter(params: &Parameters, record: StringRecord) {
     if record.len() != FILE_RECORD_LEN {
@@ -22,6 +21,12 @@ fn update_parameter(params: &Parameters, record: StringRecord) {
                     println!("Could not parse default value {} for {}", val_str, name);
                 }
                 
+                let prec_str = record.get(4).unwrap().to_string();
+                if let Ok(prec) = prec_str.trim().parse::<usize>() {
+                    param.set_precision(prec);
+                } else {
+                    println!("Could not parse precision {} for {}", val_str, name);
+                }
 
         } else {
             println!("Unknown parameter {}", &name);
