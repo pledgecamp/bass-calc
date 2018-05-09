@@ -6,7 +6,7 @@ use parameters::{Param, Parameters};
 
 use conrod::{color, widget, Colorable, Positionable, Sizeable, Widget};
 use conrod::color::rgb;
-use conrod::widget::{id, Id, list, Canvas, RangeSlider, Rectangle, List, Scrollbar, Tabs, Text, TextEdit};
+use conrod::widget::{id, Id, list, Canvas, Slider, Rectangle, List, Scrollbar, Tabs, Text, TextEdit};
 use conrod::widget::list::{Down, Fixed};
 
 pub struct BassCalcApp {
@@ -78,14 +78,14 @@ impl BassCalcApp {
                         list_id: Id, prev_id: Id, w: f64, h: f64) -> Id {
 
         let name_w = w * 0.17;
-        let range_w = w * 0.28;
+        let slider_w = w * 0.28;
         let entry_w = w * 0.25;
 
         let ids = &self.param_ids[ids_index][param_index];
         let canvas_id = ids[0];
         let line_id = ids[1];
         let name_id = ids[2];
-        let range_id = ids[3];
+        let slider_id = ids[3];
         let entry_id = ids[4];
         let unit_id = ids[5];
         
@@ -100,20 +100,15 @@ impl BassCalcApp {
         let name = format!("{}  ", param.name);
         text(&name, 14).right_justify().mid_left_of(canvas_id).w(name_w).set(name_id, ui);
 
-        let mid = param.to_percent();
-        let start = if mid < 0.1 { 0.0 } else { mid - 0.1 };
-        let end = if mid > 0.9 { 1.0 } else { mid + 0.1 };
-        for (edge, value) in RangeSlider::new(start, end, 0.0, 1.0)
+        let p_val = param.to_percent();
+        for value in Slider::new(p_val, 0.0, 1.0)
             .color(color::LIGHT_BLUE)
-            .w_h(range_w, 20.0)
+            .w_h(slider_w, 20.0)
             .align_middle_y_of(canvas_id)
             .right_from(name_id, 0.0)
-            .set(range_id, ui)
+            .set(slider_id, ui)
         {
-            match edge {
-                widget::range_slider::Edge::Start => param.set_percent(value),
-                widget::range_slider::Edge::End => param.set_percent(value),
-            }
+            
             param.set_percent(value);
             println!("{} value: {}", param.name, value)
         }
@@ -121,7 +116,7 @@ impl BassCalcApp {
         for edit in TextEdit::new(&format!("{:.*}", param.precision(), param.v()))
             .color(color::WHITE)
             .w(entry_w)
-            .right_from(range_id, 4.0)
+            .right_from(slider_id, 4.0)
             .center_justify()
             .restrict_to_height(true)
             .set(entry_id, ui)
