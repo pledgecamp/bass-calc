@@ -1,6 +1,5 @@
 
-use std::cell::Cell;
-use std::cell::RefCell;
+use std::cell::{Cell, Ref, RefCell};
 use std::rc::Rc;
 use std::f64::consts::PI;
 use std::collections::HashMap;
@@ -12,6 +11,7 @@ pub struct ParamPrivate {
     pub name: String,
     pub unit: String,
     value: Cell<f64>,
+    display: RefCell<String>,
     pub min: f64,
     pub max: f64,
     pub update_fn: Option<fn(&Parameters) -> f64>,
@@ -41,11 +41,27 @@ impl ParamPrivate {
     }
 
     pub fn set_percent(&self, percent: f64) {
-        self.set(self.min + percent*(self.max - self.min))
+        let new_value = self.min + percent*(self.max - self.min);
+        self.set(new_value);
+        let new_display = format!("{:.*}", self.precision(), new_value);
+        let _ = self.display.replace(new_display);
     }
 
     pub fn set(&self, new_value: f64) {
         self.value.set(new_value)
+    }
+
+    pub fn set_display(&self, display: String) {
+        if let Ok(val) = display.trim().parse::<f64>() {
+            self.set(val);
+        } else {
+            println!("Bad intermediate display");
+        }
+        let _ = self.display.replace(display);
+    }
+
+    pub fn display(&self) -> Ref<String> {
+        self.display.borrow()
     }
 
     pub fn precision(&self) -> usize {
@@ -160,6 +176,7 @@ pub fn make_param(name: &str, unit: &str, value: f64, min: f64, max: f64, precis
         name: name.to_string(),
         unit: unit.to_string(),
         value: Cell::new(value),
+        display: RefCell::new(value.to_string()),
         min,
         max,
         precision: Cell::new(precision),

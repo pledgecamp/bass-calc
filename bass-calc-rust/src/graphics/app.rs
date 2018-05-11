@@ -121,7 +121,8 @@ impl BassCalcApp {
             .restrict_to_height(true)
             .set(entry_id, ui)
         {
-            
+            println!("Edit {}", edit);
+            param.set_display(edit);
         }
 
         text(&param.unit, 12).right_from(entry_id, 4.0).set(unit_id, ui);
