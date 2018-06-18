@@ -7,8 +7,6 @@
 extern crate find_folder;
 extern crate csv;
 
-extern crate dimensioned as dim;
-
 mod parameters;
 
 #[cfg(all(feature="winit", feature="glium"))] mod graphics;

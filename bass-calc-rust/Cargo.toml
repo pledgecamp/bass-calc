@@ -4,15 +4,14 @@ version = "0.1.0"
 authors = ["Sam Pullman <sampullman@gmail.com>"]
 
 [dependencies]
-dimensioned = "0.6.0"
 find_folder = "0.3.0"
-csv = "1.0.0-beta.5"
+csv = "1.0.0"
 conrod_derive = "0.1"
 glium = { version = "0.21", optional = true }
 winit = { version = "0.12", optional = true }
 
 [dependencies.conrod]
-version = "0.59.0"
+version = "0.60.0"
 features = ["glium", "winit"]
 
 [features]
