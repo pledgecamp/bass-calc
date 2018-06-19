@@ -2,6 +2,7 @@
 use conrod::{Ui, UiCell};
 use std::f64;
 use graphics::{App, AppInterface, BassGraph};
+use graphics::graph_fns::{BassFnData, Radiator};
 use parameters::{Param, Parameters};
 
 use conrod::{color, widget, Colorable, Positionable, Sizeable, Widget};
@@ -257,46 +258,6 @@ impl AppInterface for BassCalcApp {
             sixteenth_lines.y(),
         ];
 
-        let P = &self.params;
-        let sin = |x: f64| -> f64 {
-            let g =  0.2; // τb / Ts 0.2 is a good guesstimate
-            let g25 = 0.66874; // g ^ 0.25
-            let α = P.α.v();
-            let δ = P.δ.v();
-            let psi = α + P.δ.v() + 1.0;
-            let y = P.y.v();
-            let y2 = y.sqrt();
-            let Qmp = P.Qmp.v();
-            let Qs = P.Qs.v();
-
-            let T0 = P.Ts.v() / (y2 * g25); // 8a
-            let a1 = (y2 / g25) * 
-                ((1.0 / Qmp) + (1.0 / (y * Qs)) + (g * ((α / y) + (y * δ))));
-
-            let a2 = (1.0 / psi.sqrt()) * (((α + 1.0) / y) +
-                                    (y * (δ + 1.0)) +
-                                    (1.0 / (Qmp * Qs)) +
-                                    (g *((α / Qmp) +
-                                    (y * (δ / Qs)))));
-
-            let a3 = (y2 / psi.powf(0.75)) *
-                (((δ + 1.0) / Qs) + ((α + 1.0) / (y * Qmp)) + (g * (α + δ)));
-            
-            
-            
-            let b1 = y2 / (Qmp * g25);
-            let b2 = y / psi.sqrt();
-
-            let num = [1.0, b1, b2, 0., 0. ];
-            let den = [1.0, a1, a2, a3, 1.0];
-
-            //sys = signal.TransferFunction(num, den)
-            //print(sys)
-            //signal.bode(sys)
-            // println!("{} {} {}", a1, a2, a3);
-            a2 / 10.0 * x.sin()
-        };
-
         let min_freq = 20.0;
         let max_freq = 200.0;
         let step = 0.1;
@@ -306,7 +267,7 @@ impl AppInterface for BassCalcApp {
             .wh_of(ids.graph_column)
             .middle_of(ids.graph_column)
             .set(ids.graph_grid, ui);
-        BassGraph::new(min_freq, max_freq, step, sin)
+        BassGraph::new(min_freq, max_freq, step, Radiator)
             .color(color::LIGHT_BLUE)
             .thickness(2.0)
             .wh_of(ids.graph_column)

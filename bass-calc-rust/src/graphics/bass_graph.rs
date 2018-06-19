@@ -4,6 +4,8 @@
 use conrod::{Color, Colorable, Positionable, Scalar, Sizeable, Widget};
 use num;
 use conrod::{widget, utils};
+use parameters::Parameters;
+use graphics::graph_fns::bass_fn_point;
 
 /// A widget that plots a BassCalc function, which depends on `Parameters`
 ///
@@ -19,6 +21,7 @@ pub struct BassGraph<F> {
     min_freq: f64,
     max_freq: f64,
     step: f64,
+    params: Parameters,
     f: F,
 }
 
@@ -47,13 +50,14 @@ pub struct State {
 
 impl<F> BassGraph<F> {
     /// Begin building a new `BassGraph` widget instance.
-    pub fn new(min_freq: f64, max_freq: f64, step: f64, f: F) -> Self {
+    pub fn new(min_freq: f64, max_freq: f64, step: f64, params: Parameters, f: F) -> Self {
         BassGraph {
             common: widget::CommonBuilder::default(),
             style: Style::default(),
             min_freq: min_freq,
             max_freq: max_freq,
             step: step,
+            params: params,
             f: f,
         }
     }
@@ -87,18 +91,19 @@ impl<F> Widget for BassGraph<F>
     fn update(self, args: widget::UpdateArgs<Self>) -> Self::Event {
 
         let widget::UpdateArgs { id, state, style, rect, ui, .. } = args;
-        let BassGraph { min_freq, max_freq, step, f, .. } = self;
+        let BassGraph { min_freq, max_freq, step, f, params, .. } = self;
 
         let y_to_scalar =
             |y| utils::map_range(y, -1.0, 1.0, rect.bottom(), rect.top());
         let scalar_to_x =
             |s| utils::map_range(s, rect.left(), rect.right(), min_freq.clone(), max_freq.clone());
 
+        let data = f(&params);
         let point_iter = (0 .. rect.w() as usize)
             .map(|x_scalar| {
                 let x_scalar = x_scalar as Scalar + rect.x.start;
                 let x = scalar_to_x(x_scalar);
-                let y = f(x);
+                let y = bass_fn_point(&data, x);
                 let y_scalar = y_to_scalar(y);
                 [x_scalar, y_scalar]
             });

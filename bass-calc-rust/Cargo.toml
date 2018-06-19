@@ -4,6 +4,7 @@ version = "0.1.0"
 authors = ["Sam Pullman <sampullman@gmail.com>"]
 
 [dependencies]
+num-complex = "0.2"
 find_folder = "0.3.0"
 csv = "1.0.0"
 num = "0.1.30"

@@ -7,6 +7,7 @@
 extern crate find_folder;
 extern crate csv;
 extern crate num;
+extern crate num_complex;
 
 mod parameters;
 
