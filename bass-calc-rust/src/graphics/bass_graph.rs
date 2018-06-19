@@ -5,7 +5,7 @@ use conrod::{Color, Colorable, Positionable, Scalar, Sizeable, Widget};
 use num;
 use conrod::{widget, utils};
 use parameters::Parameters;
-use graphics::graph_fns::bass_fn_point;
+use graphics::graph_fns::{BassFnData, bass_fn_point};
 
 /// A widget that plots a BassCalc function, which depends on `Parameters`
 ///
@@ -14,14 +14,14 @@ use graphics::graph_fns::bass_fn_point;
 ///
 /// The resulting "path" is drawn using conrod's `PointPath` primitive widget.
 #[derive(WidgetCommon)]
-pub struct BassGraph<F> {
+pub struct BassGraph<'a, F> {
     #[conrod(common_builder)]
     common: widget::CommonBuilder,
     style: Style,
     min_freq: f64,
     max_freq: f64,
     step: f64,
-    params: Parameters,
+    params: &'a Parameters,
     f: F,
 }
 
@@ -48,9 +48,9 @@ pub struct State {
 }
 
 
-impl<F> BassGraph<F> {
+impl<'a, F> BassGraph<'a, F> {
     /// Begin building a new `BassGraph` widget instance.
-    pub fn new(min_freq: f64, max_freq: f64, step: f64, params: Parameters, f: F) -> Self {
+    pub fn new(min_freq: f64, max_freq: f64, step: f64, params: &'a Parameters, f: F) -> Self {
         BassGraph {
             common: widget::CommonBuilder::default(),
             style: Style::default(),
@@ -70,8 +70,8 @@ impl<F> BassGraph<F> {
 }
 
 
-impl<F> Widget for BassGraph<F>
-          where F: Fn(params: &Parameters, x_min) -> Vec<f64>,
+impl<'a, F> Widget for BassGraph<'a, F>
+          where F: Fn(&Parameters) -> BassFnData,
 {
     type State = State;
     type Style = Style;
@@ -94,7 +94,7 @@ impl<F> Widget for BassGraph<F>
         let BassGraph { min_freq, max_freq, step, f, params, .. } = self;
 
         let y_to_scalar =
-            |y| utils::map_range(y, -1.0, 1.0, rect.bottom(), rect.top());
+            |y| utils::map_range(y, -0.5, 0.5, rect.bottom(), rect.top());
         let scalar_to_x =
             |s| utils::map_range(s, rect.left(), rect.right(), min_freq.clone(), max_freq.clone());
 
@@ -104,6 +104,7 @@ impl<F> Widget for BassGraph<F>
                 let x_scalar = x_scalar as Scalar + rect.x.start;
                 let x = scalar_to_x(x_scalar);
                 let y = bass_fn_point(&data, x);
+                // println!("{}, {}", x, y);
                 let y_scalar = y_to_scalar(y);
                 [x_scalar, y_scalar]
             });
@@ -122,6 +123,6 @@ impl<F> Widget for BassGraph<F>
 
 }
 
-impl<F> Colorable for BassGraph<F> {
+impl<'a, F> Colorable for BassGraph<'a, F> {
     builder_method!(color { style.color = Some(Color) });
 }

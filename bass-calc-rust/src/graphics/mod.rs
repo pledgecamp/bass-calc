@@ -11,6 +11,7 @@ use conrod::glium::glutin::{ContextBuilder, WindowBuilder};
 use std;
 
 pub mod bass_graph;
+pub mod graph_fns;
 pub use self::bass_graph::BassGraph;
 
 pub mod app;

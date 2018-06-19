@@ -262,12 +262,12 @@ impl AppInterface for BassCalcApp {
         let max_freq = 200.0;
         let step = 0.1;
 
-        widget::Grid::new(min_freq, max_freq, -1.0, 1.0, lines.iter().cloned())
+        widget::Grid::new(min_freq, max_freq, -0.5, 0.5, lines.iter().cloned())
             .color(color::rgb(0.1, 0.12, 0.15))
             .wh_of(ids.graph_column)
             .middle_of(ids.graph_column)
             .set(ids.graph_grid, ui);
-        BassGraph::new(min_freq, max_freq, step, Radiator)
+        BassGraph::new(min_freq, max_freq, step, &self.params, Radiator)
             .color(color::LIGHT_BLUE)
             .thickness(2.0)
             .wh_of(ids.graph_column)
