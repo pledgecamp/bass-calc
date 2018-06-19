@@ -10,6 +10,9 @@ use conrod::glium::texture::Texture2d;
 use conrod::glium::glutin::{ContextBuilder, WindowBuilder};
 use std;
 
+pub mod bass_graph;
+pub use self::bass_graph::BassGraph;
+
 pub mod app;
 
 pub trait AppInterface {

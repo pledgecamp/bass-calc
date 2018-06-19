@@ -172,4 +172,3 @@ class BassGraph(Figure):
         self.plot.cla()
         print("WWW {}", w)
         self.plot.plot(w, mag, 'b')
-
