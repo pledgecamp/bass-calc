@@ -10,7 +10,7 @@ from gui.controller import init_app, show_main, start_app, register_param_change
 from calc.parameters import parameters, Cab, Qs, Qmp, Vb, Tp, Ts, α, δ, y, Fp, Fs, t, Tb, Qms, Qes
 from file_utils import load_defaults
 
-# Equation from "Complete Response Function and System Parameters for a Loudspeaker with Passive Radiator"
+# Equations from "Complete Response Function and System Parameters for a Loudspeaker with Passive Radiator"
 # by Douglas H. Hurlburt
 
 class Equation:

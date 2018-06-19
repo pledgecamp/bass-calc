@@ -12,14 +12,13 @@ use conrod::{widget, utils};
 ///
 /// The resulting "path" is drawn using conrod's `PointPath` primitive widget.
 #[derive(WidgetCommon)]
-pub struct BassGraph<X, Y, F> {
+pub struct BassGraph<F> {
     #[conrod(common_builder)]
     common: widget::CommonBuilder,
     style: Style,
-    min_x: X,
-    max_x: X,
-    min_y: Y,
-    max_y: Y,
+    min_freq: f64,
+    max_freq: f64,
+    step: f64,
     f: F,
 }
 
@@ -46,16 +45,15 @@ pub struct State {
 }
 
 
-impl<X, Y, F> BassGraph<X, Y, F> {
+impl<F> BassGraph<F> {
     /// Begin building a new `BassGraph` widget instance.
-    pub fn new(min_x: X, max_x: X, min_y: Y, max_y: Y, f: F) -> Self {
+    pub fn new(min_freq: f64, max_freq: f64, step: f64, f: F) -> Self {
         BassGraph {
             common: widget::CommonBuilder::default(),
             style: Style::default(),
-            min_x: min_x,
-            max_x: max_x,
-            min_y: min_y,
-            max_y: max_y,
+            min_freq: min_freq,
+            max_freq: max_freq,
+            step: step,
             f: f,
         }
     }
@@ -68,10 +66,8 @@ impl<X, Y, F> BassGraph<X, Y, F> {
 }
 
 
-impl<X, Y, F> Widget for BassGraph<X, Y, F>
-    where X: num::NumCast + Clone,
-          Y: num::NumCast + Clone,
-          F: FnMut(X) -> Y,
+impl<F> Widget for BassGraph<F>
+          where F: Fn(params: &Parameters, x_min) -> Vec<f64>,
 {
     type State = State;
     type Style = Style;
@@ -91,12 +87,12 @@ impl<X, Y, F> Widget for BassGraph<X, Y, F>
     fn update(self, args: widget::UpdateArgs<Self>) -> Self::Event {
 
         let widget::UpdateArgs { id, state, style, rect, ui, .. } = args;
-        let BassGraph { min_x, max_x, min_y, max_y, mut f, .. } = self;
+        let BassGraph { min_freq, max_freq, step, f, .. } = self;
 
         let y_to_scalar =
-            |y| utils::map_range(y, min_y.clone(), max_y.clone(), rect.bottom(), rect.top());
+            |y| utils::map_range(y, -1.0, 1.0, rect.bottom(), rect.top());
         let scalar_to_x =
-            |s| utils::map_range(s, rect.left(), rect.right(), min_x.clone(), max_x.clone());
+            |s| utils::map_range(s, rect.left(), rect.right(), min_freq.clone(), max_freq.clone());
 
         let point_iter = (0 .. rect.w() as usize)
             .map(|x_scalar| {
@@ -121,6 +117,6 @@ impl<X, Y, F> Widget for BassGraph<X, Y, F>
 
 }
 
-impl<X, Y, F> Colorable for BassGraph<X, Y, F> {
+impl<F> Colorable for BassGraph<F> {
     builder_method!(color { style.color = Some(Color) });
 }

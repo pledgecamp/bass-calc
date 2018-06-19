@@ -248,11 +248,6 @@ impl AppInterface for BassCalcApp {
 
         //text("Graph", 36).middle_of(ids.tab_graph).set(ids.tab_graph_label, ui);
 
-        let min_x = 0.0;
-        let max_x = f64::consts::PI * 2.0;
-        let min_y = -1.0;
-        let max_y = 1.0;
-
         let quarter_lines = widget::grid::Lines::step(0.5_f64).thickness(2.0);
         let sixteenth_lines = widget::grid::Lines::step(0.125_f64).thickness(1.0);
         let lines = &[
@@ -302,12 +297,16 @@ impl AppInterface for BassCalcApp {
             a2 / 10.0 * x.sin()
         };
 
-        widget::Grid::new(min_x, max_x, min_y, max_y, lines.iter().cloned())
+        let min_freq = 20.0;
+        let max_freq = 200.0;
+        let step = 0.1;
+
+        widget::Grid::new(min_freq, max_freq, -1.0, 1.0, lines.iter().cloned())
             .color(color::rgb(0.1, 0.12, 0.15))
             .wh_of(ids.graph_column)
             .middle_of(ids.graph_column)
             .set(ids.graph_grid, ui);
-        BassGraph::new(min_x, max_x, min_y, max_y, sin)
+        BassGraph::new(min_freq, max_freq, step, sin)
             .color(color::LIGHT_BLUE)
             .thickness(2.0)
             .wh_of(ids.graph_column)
