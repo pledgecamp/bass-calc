@@ -5,7 +5,7 @@ use conrod::{Color, Colorable, Positionable, Scalar, Sizeable, Widget};
 use num;
 use conrod::{widget, utils};
 use parameters::Parameters;
-use graphics::graph_fns::{BassFnData, bass_fn_point};
+use functions::{BassFnData, bass_fn_point};
 
 /// A widget that plots a BassCalc function, which depends on `Parameters`
 ///
@@ -94,7 +94,7 @@ impl<'a, F> Widget for BassGraph<'a, F>
         let BassGraph { min_freq, max_freq, step, f, params, .. } = self;
 
         let y_to_scalar =
-            |y| utils::map_range(y, -0.5, 0.5, rect.bottom(), rect.top());
+            |y| utils::map_range(y, -1., 1., rect.bottom(), rect.top());
         let scalar_to_x =
             |s| utils::map_range(s, rect.left(), rect.right(), min_freq.clone(), max_freq.clone());
 
@@ -104,7 +104,7 @@ impl<'a, F> Widget for BassGraph<'a, F>
                 let x_scalar = x_scalar as Scalar + rect.x.start;
                 let x = scalar_to_x(x_scalar);
                 let y = bass_fn_point(&data, x);
-                // println!("{}, {}", x, y);
+                //println!("{}, {}", x, y);
                 let y_scalar = y_to_scalar(y);
                 [x_scalar, y_scalar]
             });

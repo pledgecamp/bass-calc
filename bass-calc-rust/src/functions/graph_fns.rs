@@ -5,30 +5,35 @@ use parameters::Parameters;
 use num_complex::Complex64;
 type C64 = Complex64;
 
+use uom::si::length::{meter};
+use uom::si::length;
+
 pub struct BassFnData {
-    num: Vec<f64>,
-    den: Vec<f64>
+    pub num: Vec<f64>,
+    pub den: Vec<f64>
 }
 
-fn poly_calc(x: f64, scale: f64, exp: f64) -> C64 {
-    let i = C64::new(0.0, x);
-    scale * i.powf(exp)
+fn poly_calc(vec: &Vec<f64>, w: f64) -> C64 {
+    vec.iter().rev().enumerate().fold(C64::new(0., 0.), |sum, (index, scale)| {
+        let i = C64::new(0.0, w.clone());
+        sum + scale * i.powf(index as f64)
+    })
 }
 
 // Calculate a single point on the graph represented by `data` at frequency `w`
 pub fn bass_fn_point(data: &BassFnData, w: f64) -> f64 {
-    let num: C64 = data.num.iter().enumerate().fold(C64::new(0.0, 0.0), |s, (i, v)| s + poly_calc(v.clone(), w, i.clone() as f64));
-    let den: C64 = data.den.iter().enumerate().fold(C64::new(0.0, 0.0), |s, (i, v)| s + poly_calc(v.clone(), w, i.clone() as f64));
+    let num = poly_calc(&data.num, w);
+    let den = poly_calc(&data.den, w);
     let n = num / den;
     n.norm_sqr().sqrt()
 }
 
 pub fn Radiator(params: &Parameters) -> BassFnData {
     let g =  0.2; // τb / Ts 0.2 is a good guesstimate
-    let g25 = 0.66874; // g ^ 0.25
+    let g25 = 0.66874030497; // g ^ 0.25
     let α = params.α.v();
     let δ = params.δ.v();
-    let psi = α + params.δ.v() + 1.0;
+    let psi = α + δ + 1.0;
     let y = params.y.v();
     let y2 = y.sqrt();
     let Qmp = params.Qmp.v();

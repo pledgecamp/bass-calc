@@ -2,7 +2,7 @@
 use conrod::{Ui, UiCell};
 use std::f64;
 use graphics::{App, AppInterface, BassGraph};
-use graphics::graph_fns::{BassFnData, Radiator};
+use functions::{BassFnData, Radiator};
 use parameters::{Param, Parameters};
 
 use conrod::{color, widget, Colorable, Positionable, Sizeable, Widget};
@@ -262,7 +262,7 @@ impl AppInterface for BassCalcApp {
         let max_freq = 200.0;
         let step = 0.1;
 
-        widget::Grid::new(min_freq, max_freq, -0.5, 0.5, lines.iter().cloned())
+        widget::Grid::new(min_freq, max_freq, -1., 1., lines.iter().cloned())
             .color(color::rgb(0.1, 0.12, 0.15))
             .wh_of(ids.graph_column)
             .middle_of(ids.graph_column)

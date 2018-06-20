@@ -8,8 +8,10 @@ extern crate find_folder;
 extern crate csv;
 extern crate num;
 extern crate num_complex;
+extern crate uom;
 
 mod parameters;
+mod functions;
 
 #[cfg(all(feature="winit", feature="glium"))] mod graphics;
 use graphics::*;

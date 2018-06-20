@@ -4,6 +4,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use std::f64::consts::PI;
 use std::collections::HashMap;
+use uom::Conversion;
 
 const PI2: f64 = 2.0 * PI;
 
@@ -30,6 +31,11 @@ impl ParamPrivate {
     pub fn v(&self) -> f64 {
         self.value.get()
     }
+    /*
+    pub fn q<N>(&self) -> Quantity {
+        self.unit
+    }
+    */
 
     pub fn to_percent(&self) -> f64 {
         (self.v() - self.min) / (self.max - self.min)
