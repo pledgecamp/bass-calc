@@ -2,7 +2,7 @@
 use conrod::{Ui, UiCell};
 use std::f64;
 use graphics::{App, AppInterface, BassGraph};
-use functions::{BassFnData, RadiatorAlt};
+use functions::RadiatorAlt;
 use parameters::{Param, Parameters};
 
 use conrod::{color, widget, Colorable, Positionable, Sizeable, Widget};

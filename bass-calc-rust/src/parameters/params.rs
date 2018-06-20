@@ -4,7 +4,6 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use std::f64::consts::PI;
 use std::collections::HashMap;
-use uom::Conversion;
 
 const PI2: f64 = 2.0 * PI;
 
