@@ -2,13 +2,12 @@
 use conrod::{Ui, UiCell};
 use std::f64;
 use graphics::{App, AppInterface, BassGraph};
-use functions::RadiatorAlt;
+use functions::Radiator;
 use parameters::{Param, Parameters};
 
 use conrod::{color, widget, Colorable, Positionable, Sizeable, Widget};
 use conrod::color::rgb;
-use conrod::widget::{id, Id, list, Canvas, Slider, Rectangle, List, Scrollbar, Tabs, Text, TextEdit};
-use conrod::widget::list::{Down, Fixed};
+use conrod::widget::{id, Id, Canvas, Slider, Rectangle, Scrollbar, Tabs, Text, TextEdit};
 
 pub struct BassCalcApp {
     ids: Option<Ids>,
@@ -114,7 +113,7 @@ impl BassCalcApp {
             println!("{} value: {}", param.name, value)
         }
 
-        for edit in TextEdit::new(&format!("{:.*}", param.precision(), param.v()))
+        for _edit in TextEdit::new(&format!("{:.*}", param.precision(), param.v()))
             .color(color::WHITE)
             .w(entry_w)
             .right_from(slider_id, 4.0)
@@ -149,10 +148,6 @@ impl BassCalcApp {
         let passive = &self.params.passive;
         let enclosure = &self.params.enclosure;
         let constants = &self.params.constant;
-        let len1 = driver.len() + 1;
-        let len2 = len1 + passive.len() + 1;
-        let len3 = len2 + enclosure.len() + 1;
-        let len4 = len3 + constants.len() + 1;
 
         let h = 38.0;
         
@@ -177,7 +172,7 @@ impl BassCalcApp {
         prev_id = self.draw_list_params(ui, 2, enclosure, list_id, prev_id, w, h);
 
         prev_id = self.draw_list_title("Constants", ui, 3, list_id, prev_id, w, h);
-        prev_id = self.draw_list_params(ui, 3, constants, list_id, prev_id, w, h);
+        self.draw_list_params(ui, 3, constants, list_id, prev_id, w, h);
     }
 
 }
@@ -188,7 +183,7 @@ fn text(text: &str, size: u32) -> Text {
 
 fn init_param_ids(id_gen: &mut id::Generator, params: &[Param]) -> Vec<[Id; 6]> {
     let mut ids: Vec<[Id; 6]> = vec![];
-    for p in params.iter() {
+    for _ in params.iter() {
         ids.push([id_gen.next(), id_gen.next(), id_gen.next(),
                   id_gen.next(), id_gen.next(), id_gen.next()]);
     }
@@ -216,11 +211,10 @@ impl AppInterface for BassCalcApp {
 
     fn draw(&mut self, ui: &mut UiCell, size: (u32, u32)) {
 
-        let (W, H) = size;
+        let (W, _) = size;
 
         let width = W as f64;
         let param_w = width / 4.0;
-        let height = H as f64;
 
         {
         let ref ids = self.ids.as_mut().unwrap();
@@ -267,7 +261,7 @@ impl AppInterface for BassCalcApp {
             .wh_of(ids.graph_column)
             .middle_of(ids.graph_column)
             .set(ids.graph_grid, ui);
-        BassGraph::new(min_freq, max_freq, step, &self.params, RadiatorAlt)
+        BassGraph::new(min_freq, max_freq, step, &self.params, Radiator)
             .color(color::LIGHT_BLUE)
             .thickness(2.0)
             .wh_of(ids.graph_column)

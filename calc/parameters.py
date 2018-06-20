@@ -250,8 +250,8 @@ Tb.set_update_fn(lambda: (1 / ωp))
 ωb.set_update_fn(lambda: (Fp * 2*pi))
 α.set_update_fn(lambda: (Cas / Cab))
 δ.set_update_fn(lambda: (Cap / Cab))
-y.set_update_fn(lambda: (Fb / Fs))
-h.set_update_fn(lambda: Fb / Fp)
+y.set_update_fn(lambda: (Fp / Fs))
+h.set_update_fn(lambda: Fb / Fs)
 η0.set_update_fn(lambda: ((4 * pi ** 2) / (c ** 3)) * ((Fs ** 3) * Vas / Qes))
 
 for param in parameters.values():

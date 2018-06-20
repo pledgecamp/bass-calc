@@ -2,7 +2,6 @@
 //! Based on https://github.com/PistonDevelopers/conrod/blob/master/src/widget/plot_path.rs
 
 use conrod::{Color, Colorable, Positionable, Scalar, Sizeable, Widget};
-use num;
 use conrod::{widget, utils};
 use parameters::Parameters;
 use functions::{BassFnData, bass_fn_point};

@@ -310,11 +310,11 @@ pub fn δ_update(P: &Parameters) -> f64 {
 }
 
 pub fn y_update(P: &Parameters) -> f64 {
-    P.Fb.v() / P.Fs.v()
+    P.Fp.v() / P.Fs.v()
 }
 
 pub fn h_update(P: &Parameters) -> f64 {
-    P.Fb.v() / P.Fp.v()
+    P.Fb.v() / P.Fs.v()
 }
 
 // (1000 / (m/s)^3) * (Hz^3 * L) = 1
