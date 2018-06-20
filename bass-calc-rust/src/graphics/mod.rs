@@ -20,7 +20,6 @@ pub trait AppInterface {
     fn draw(&mut self, &mut UiCell, (u32, u32));
 }
 
-#[cfg(feature="glium")]
 pub struct App<T: AppInterface> {
     events_loop: glutin::EventsLoop,
     image_map: image::Map<Texture2d>,
@@ -33,7 +32,6 @@ pub struct App<T: AppInterface> {
     last_update: std::time::Instant,
 }
 
-#[cfg(feature="glium")]
 impl<T> App<T> where T: AppInterface {
 
     pub fn new(title: &str, window_size: (u32, u32), mut interface: T) -> App<T> {

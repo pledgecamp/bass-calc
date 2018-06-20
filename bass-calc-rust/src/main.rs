@@ -13,10 +13,9 @@ extern crate uom;
 mod parameters;
 mod functions;
 
-#[cfg(all(feature="winit", feature="glium"))] mod graphics;
+mod graphics;
 use graphics::*;
 
-#[cfg(all(feature="winit", feature="glium"))]
 fn main() {
     let P = parameters::file_defaults();
     

@@ -46,6 +46,7 @@ pub fn Radiator(params: &Parameters) -> BassFnData {
     let a4 = Ts2 * Tp2;
 
     let a3 = Ts2 * Tp / Qmp +
+            Tp2 * Ts / Qs +
             (g * Ts) * (α * Tp2 + (δ * Ts2));
 
     let a2 = Tp2 * (α + 1.) +

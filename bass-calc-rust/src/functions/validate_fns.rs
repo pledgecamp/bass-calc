@@ -17,7 +17,7 @@ fn Tp(params: &Parameters) -> Time {
     Time::new::<second>(params.Tp.v())
 }
 
-/// Another formulation of 
+/// Reduced version of Hurlburt
 #[allow(dead_code)]
 pub fn ValidateRadiatorTest(params: &Parameters) -> BassFnData {
     let g =  0.2; // τb / Ts 0.2 is a good guesstimate
@@ -75,6 +75,7 @@ fn ValidateRadiator(params: &Parameters) -> BassFnData {
     let a4 = Ts2 * Tp2;
 
     let a3 = Ts2 * Tp / Qmp +
+            Tp2 * Ts / Qs +
             (g * Ts) * (α * Tp2 + (δ * Ts2));
 
     let a2 = Tp2 * (α + 1.) +
@@ -98,9 +99,14 @@ mod test {
     use functions::graph_fns::*;
     use parameters::builtin_defaults;
 
-    fn bass_data_cmp(a: &BassFnData, b: &BassFnData) -> bool {
-        return a.num.iter().eq(b.num.iter()) &&
-            a.den.iter().eq(b.den.iter())
+    pub fn nearly_equal(a: f64, b: f64) -> bool {
+        let diff = (a - b).abs();
+
+        if a == b { // Handle infinities.
+            true
+        } else {
+            diff < 0.00000000000001
+        }
     }
 
     #[test]
@@ -109,9 +115,18 @@ mod test {
         let d1 = ValidateRadiator(&params);
         let d2 = Radiator(&params);
         let d3 = ValidateRadiatorTest(&params);
-        println!("{:?}\n{:?}\n", d1.num, d3.num);
-        println!("{:?}\n{:?}", d1.den, d3.den);
-        assert!(bass_data_cmp(&d1, &d2));
-        assert!(bass_data_cmp(&d1, &d3));
+
+        let b1 = bass_fn_point(&d1, 20.0);
+        let b2 = bass_fn_point(&d2, 20.0);
+        let b3 = bass_fn_point(&d3, 20.0);
+        let t1 = bass_fn_point(&d1, 200.0);
+        let t2 = bass_fn_point(&d2, 200.0);
+        let t3 = bass_fn_point(&d3, 200.0);
+        println!("{} {} {}\n", b1, b2, b3);
+        println!("{} {} {}\n", t1, t2, t3);
+        assert!(nearly_equal(b1, b2));
+        assert!(nearly_equal(b1, b3));
+        assert!(nearly_equal(t1, t2));
+        assert!(nearly_equal(t1, t3));
     }
 }
